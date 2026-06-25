@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -469,11 +469,10 @@
           <button id="bb-random" title="Random July-4 block">🎲</button>
         </div>
         <div class="bb-row bb-nav">
-          <button id="bb-prev" title="Previous (by rank)">◀</button>
+          <button id="bb-prev" title="Previous block">◀</button>
           <span id="bb-status">Loading July-4 blocks…</span>
-          <button id="bb-next" title="Next (by rank)">▶</button>
+          <button id="bb-next" title="Next block">▶</button>
         </div>
-        <label class="bb-listlabel"><input type="checkbox" id="bb-curated" checked> walk curated 250 only</label>
       </div>
       <div id="timeline-header">Timeline (Max 15s)</div>
       <div id="timeline-list"></div>
@@ -583,6 +582,7 @@
             <div>Left-click drag: Move</div>
             <div>Right-click drag: Rotate</div>
             <div>S + mouse move: Scale</div>
+            <div>Spacebar: Swap frame</div>
           </div>
         </div>
       </div>
@@ -2156,12 +2156,17 @@
 
     function showFrameToast() {
       const fk = FREEZE_POINTS[freezeIndex];
-      let frameNum = '—', total = '—';
-      // Real, computed frame numbers (frame 1 / peak / end-3) from the module.
+      let curSec = '—', totSec = '—';
+      // Convert the computed key frame (frame 1 / peak / end-9) to true seconds:
+      // frame 1 reads 0.00; total frames / fps reads the full length (e.g. 15.00).
       const tType = placedAnimation ? placedAnimation.type : animationType.value;
       const kf = tType ? keyFramesFor(tType) : null;
-      if (kf) { total = kf.total; frameNum = freezeFrame(tType, fk); }
-      frameToast.innerHTML = `<span class="toast-label">${FREEZE_LABELS[fk]}</span> · frame ${frameNum} / ${total}`;
+      if (kf) {
+        const fps = kf.fps || 60;
+        curSec = (Math.max(0, freezeFrame(tType, fk) - 1) / fps).toFixed(2);
+        totSec = (kf.total / fps).toFixed(2);
+      }
+      frameToast.innerHTML = `<span class="toast-label">${FREEZE_LABELS[fk]}</span> · ${curSec} / ${totSec}s`;
 
       // Position the toast just below the current animation in the preview.
       const dispScale = previewCanvas.clientWidth / previewCanvas.width;
@@ -2326,29 +2331,25 @@
       const elNext = document.getElementById('bb-next');
       const elRandom = document.getElementById('bb-random');
       const elStatus = document.getElementById('bb-status');
-      const elCurated = document.getElementById('bb-curated');
       if (!elGo) return;
 
       const blocksByHeight = new Map();
-      let orderAll = [];       // heights by score (full ranking)
-      let orderCurated = [];   // heights of the curated 250 (by curated rank)
-      const meta = new Map();  // height -> { year, score, rank }
+      let order = [];          // remaining-list heights, ascending (◀▶ walk lowest→highest)
+      const meta = new Map();  // height -> { year }
       let ptr = 0, ready = false;
 
-      const activeOrder = () => (elCurated.checked && orderCurated.length ? orderCurated : orderAll);
-
+      // The Builder ONLY ever sees the remaining list. The curated 250 is in
+      // production for other users and is intentionally not loaded or hosted here.
       (async function load() {
         try {
-          const [bd, rk] = await Promise.all([
-            fetch('block-shows/data/blocks_july4.json').then(r => r.json()),
-            fetch('block-shows/out/ranking.json').then(r => r.json()),
-          ]);
-          for (const b of bd.blocks) blocksByHeight.set(b.height, b);
-          orderAll = rk.ranking.map(r => r.height);
-          for (const r of rk.ranking) meta.set(r.height, { year: r.year, score: r.score, rank: r.rank });
-          orderCurated = (rk.curated || []).map(c => c.height);
+          const rem = await fetch('block-shows/out/remaining.json').then(r => r.json());
+          for (const b of rem.blocks) {
+            blocksByHeight.set(b.height, b);
+            meta.set(b.height, { year: b.year });
+          }
+          order = rem.blocks.map(b => b.height).sort((a, b) => a - b); // walk lowest→highest
           ready = true;
-          elStatus.textContent = `${bd.blocks.length} blocks · ${orderCurated.length} curated — ▶ to start`;
+          elStatus.textContent = `${rem.blocks.length} blocks — ▶ to start`;
         } catch (e) {
           elStatus.textContent = 'serve over http:// to load block data';
         }
@@ -2371,31 +2372,30 @@
         drawPreview();
         playBtn.click();
         const m = meta.get(block.height) || {};
-        elStatus.textContent = `#${block.height} · ${m.year || '?'} · rank ${m.rank || '?'} · ${(m.score || 0).toFixed(3)}`;
+        elStatus.textContent = `#${block.height} · ${m.year || '?'}`;
       }
 
       function goHeight(h) {
         const b = blocksByHeight.get(h);
-        if (!b) { elStatus.textContent = `#${h} is not a July-4 block`; return; }
-        const i = activeOrder().indexOf(h);
-        if (i >= 0) ptr = i;
+        if (!b) { elStatus.textContent = `#${h} is not available`; return; }
+        const i = order.indexOf(h);
+        if (i >= 0) { ptr = i; started = true; } // ◀▶ continue from here
         elHeight.value = h;
         generateAndPlay(b);
       }
+      let started = false;     // first ▶ shows the lowest height, first ◀ the highest
       function step(d) {
-        if (!ready) return;
-        const ord = activeOrder();
-        if (!ord.length) return;
-        ptr = (ptr + d + ord.length) % ord.length;
-        goHeight(ord[ptr]);
+        if (!ready || !order.length) return;
+        if (!started) { started = true; ptr = d >= 0 ? 0 : order.length - 1; }
+        else ptr = (ptr + d + order.length) % order.length;
+        goHeight(order[ptr]);
       }
 
       elGo.addEventListener('click', () => { const h = parseInt(elHeight.value, 10); if (h) goHeight(h); });
       elHeight.addEventListener('keydown', e => { if (e.key === 'Enter') { const h = parseInt(elHeight.value, 10); if (h) goHeight(h); } });
       elPrev.addEventListener('click', () => step(-1));
       elNext.addEventListener('click', () => step(1));
-      elRandom.addEventListener('click', () => { if (!ready) return; const ord = activeOrder(); ptr = Math.floor(Math.random() * ord.length); goHeight(ord[ptr]); });
-      elCurated.addEventListener('change', () => { ptr = 0; });
+      elRandom.addEventListener('click', () => { if (!ready || !order.length) return; started = true; ptr = Math.floor(Math.random() * order.length); goHeight(order[ptr]); });
     })();
 
     // Export inscription
@@ -2813,10 +2813,10 @@
       }
       function isValidTaproot(addr) {
         const dec = b32Decode(addr);
-        if (!dec || dec.hrp !== 'bc' || dec.data.length < 1) return false;
+        if (!dec || dec.hrp !== 'bc' || dec.data.length < 7) return false;     // 1 version + 6 checksum min
         if (dec.data[0] !== 1) return false;                                   // taproot = witness v1
         if (b32Polymod(b32HrpExpand('bc').concat(dec.data)) !== BECH32M_CONST) return false;
-        const prog = convertbits(dec.data.slice(1), 5, 8, false);
+        const prog = convertbits(dec.data.slice(1, dec.data.length - 6), 5, 8, false); // drop checksum
         return !!prog && prog.length === 32;
       }
 
