@@ -2342,7 +2342,7 @@
       // production for other users and is intentionally not loaded or hosted here.
       (async function load() {
         try {
-          const rem = await fetch('block-shows/out/remaining.json').then(r => r.json());
+          const rem = await fetch('block-shows/7_4_250_blocks.json').then(r => r.json());
           for (const b of rem.blocks) {
             blocksByHeight.set(b.height, b);
             meta.set(b.height, { year: b.year });
