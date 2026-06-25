@@ -99,8 +99,8 @@ function rocketPoints() {
 // scales uniformly from the central pop -- matching the real ₿ proportions.
 const B_LEFT = -70, B_STEM_R = -34, B_CAP = 74;
 const B_XCTR = -8, B_RX = B_CAP - B_XCTR;
-const B_UP_T = -108, B_UP_B = -3;   // outer loops pinch tighter at the centre spine
-const B_LO_T = 3,    B_LO_B = 108;
+const B_UP_T = -108, B_UP_B = -1;   // outer loops pinch tighter at the centre spine
+const B_LO_T = 1,    B_LO_B = 108;
 const B_WAIST = 2;                  // half-height of the pinched waist gap
 const B_WAIST_R = 6;               // short spine -> the two bowls meet in a sharp point, not a blunt bar
 // Counters are D-shaped (flat left wall + rounded right) so the inner edge reads
@@ -145,8 +145,12 @@ function bitcoinPoints() {
       if (!solidB(x, y)) continue;
       // keep a cell only if it borders empty space (i.e. it's on the outline)
       if (!solidB(x - S, y) || !solidB(x + S, y) || !solidB(x, y - S) || !solidB(x, y + S)) {
-        // Drop the two stray beads that poke into the spine gap between the bowls.
-        if (Math.abs(y) < 10 && x > B_XCTR) continue;
+        // Drop flat horizontal bottom/top segments near the waist: a dot that is only on
+        // the bottom (or top) edge — right neighbour inside but below (above) is empty —
+        // creates rectangular "square base" artefacts on each loop.  Keep only corner dots
+        // (where the right neighbour is also empty) so the loops taper diagonally to a vertex.
+        if (solidB(x + S, y) && !solidB(x, y + S) && y > -30 && y < 0) continue; // upper flat bottom
+        if (solidB(x + S, y) && !solidB(x, y - S) && y <  30 && y > 0) continue; // lower flat top
         pts.push({ x: x + CX, y: y });
       }
     }
