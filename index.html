@@ -490,7 +490,7 @@
               <option value="shape">⭕ Shape</option>
               <option value="background">🖼️ Background</option>
               <option value="foreground">🎭 Foreground</option>
-              <option value="term">🎆 Term</option>
+              <option value="term">🎆 Term — ends the show</option>
             </select>
             <div id="moon-phase-group" style="display:none;margin-top:8px;">
               <label style="display:block;white-space:nowrap;">Moon Phase: <span id="moon-phase-value">Full</span></label>
@@ -1273,6 +1273,11 @@
       if (isPlaced) {
         // Being positioned: show the freeze-selected key frame (spacebar cycles).
         frame = freezeFrame(anim.type, anim.freeze);
+        // The TERM's rise begins off-screen (its 'first' frame is a blank canvas), so
+        // DISPLAY it at its visible peak in the global preview while positioning. This
+        // changes only what's shown — the saved freeze/startFrame and the runtime
+        // full-sequence playback (from frame 1) are untouched.
+        if (anim.category === 'term') frame = freezeFrame(anim.type, 'largest');
         active = true;
       } else {
         // Accepted: begin at startF and play forward; inactive before its start.
@@ -1854,9 +1859,12 @@
         }
       }
 
-      // Layers start at 0; the term starts end-DURATION so its 2s of held text
-      // lands in the final 2s and holds through the loop; bursts use the playhead.
-      const startTime = isLayer ? 0 : isTerm ? Math.max(0, playbackEnd() - durationMs) : currentTime;
+      // Layers span the whole show (start at 0). Everything else — including the
+      // TERM — is stamped at the current playhead, so the term lands exactly where
+      // the timeline slider sits when you Accept (no longer auto-pinned to the end).
+      // Once placed, the term defines the show end via playbackEnd(), cutting off
+      // anything still running past term.startTime + duration.
+      const startTime = isLayer ? 0 : currentTime;
       const endTime = startTime + durationMs;
 
       if (!isLayer && !isTerm && endTime > 15000) {
@@ -2274,16 +2282,26 @@
     // shape) finishes, so the show doesn't sit through empty seconds. Background
     // and foreground layers don't count (they span the whole 15s). Capped at the
     // 15s limit; falls back to 15s if no fireworks are placed.
-    function playbackEnd() {
+    // Natural end of the firework bursts: 0.5s after the LAST body/tail/shape
+    // finishes, capped at 15s (bg/fg span the whole show; term is excluded here so
+    // it can be timed against this without feeding back on itself).
+    function fireworksEnd() {
       let last = 0;
       timeline.forEach(anim => {
-        // bg/fg span the whole show; the term banner is timed to the END and must
-        // NOT push the end out (it's excluded so it can hold through the loop).
         if (anim.category === 'background' || anim.category === 'foreground' || anim.category === 'term') return;
         last = Math.max(last, anim.startTime + anim.duration);
       });
       if (last <= 0) return 15000;
       return Math.min(last + 500, 15000);
+    }
+
+    function playbackEnd() {
+      // A Term firework ENDS the show: if one is placed, the loop point is exactly
+      // when its timer exhausts — anything still running past that frame is cut off.
+      // With no term, the show ends naturally 0.5s after the last burst.
+      const term = timeline.find(anim => anim.category === 'term');
+      if (term) return term.startTime + term.duration;
+      return fireworksEnd();
     }
 
     function animate() {
@@ -2456,7 +2474,12 @@
         if (a.category === 'background' || a.category === 'foreground' || a.category === 'term') return;
         lastBurst = Math.max(lastBurst, a.startTime + a.duration);
       });
-      const showEnd = lastBurst <= 0 ? 15000 : Math.min(lastBurst + 500, 15000);
+      const naturalEnd = lastBurst <= 0 ? 15000 : Math.min(lastBurst + 500, 15000);
+      // A Term firework ENDS the show: if one is placed, the loop point is exactly
+      // when its timer exhausts (cutting off anything still running past it).
+      // Otherwise the show ends naturally 0.5s after the last burst.
+      const term = animations.find(a => a.category === 'term');
+      const showEnd = term ? term.startTime + term.duration : naturalEnd;
 
       return `<!DOCTYPE html>
 <html>
