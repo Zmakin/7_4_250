@@ -1,0 +1,3053 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ordinals Fireworks Builder</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { 
+      font-family: 'Segoe UI', Tahoma, sans-serif; 
+      background: #1a1a1a; 
+      color: #fff;
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #header {
+      background: #2a2a2a;
+      padding: 12px 20px;
+      border-bottom: 2px solid #444;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    h1 { font-size: 20px; font-weight: 600; }
+
+    .header-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .header-buttons button {
+      padding: 8px 16px;
+      background: #444;
+      border: none;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+
+    .header-buttons button:hover {
+      background: #555;
+    }
+
+    #import-btn {
+      background: #FF9800 !important;
+    }
+
+    #import-btn:hover {
+      background: #F57C00 !important;
+    }
+
+    #main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    #timeline {
+      width: 350px;
+      background: #252525;
+      border-right: 2px solid #444;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #timeline-header {
+      padding: 15px;
+      background: #2d2d2d;
+      border-bottom: 1px solid #444;
+      font-weight: 600;
+    }
+
+    #timeline-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+    }
+
+    .timeline-item {
+      background: #333;
+      margin-bottom: 8px;
+      padding: 10px;
+      border-radius: 4px;
+      font-size: 13px;
+      cursor: pointer;
+      border-left: 3px solid;
+      transition: background 0.2s;
+      position: relative;
+    }
+
+    .timeline-item:hover {
+      background: #3a3a3a;
+    }
+
+    .timeline-item-time {
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: #4CAF50;
+    }
+
+    .timeline-item-details {
+      font-size: 11px;
+      color: #aaa;
+    }
+
+    .delete-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #f44336;
+      color: white;
+      border: none;
+      border-radius: 3px;
+      padding: 4px 8px;
+      font-size: 10px;
+      cursor: pointer;
+    }
+
+    .delete-btn:hover {
+      background: #d32f2f;
+    }
+
+    #export-btn {
+      margin: 10px;
+      padding: 12px;
+      background: #4CAF50;
+      border: none;
+      color: white;
+      font-weight: 600;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    #export-btn:hover {
+      background: #45a049;
+    }
+
+    #workspace {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      gap: 20px;
+    }
+
+    #picker {
+      background: #2a2a2a;
+      padding: 20px;
+      border-radius: 8px;
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+
+    #picker-controls {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 15px;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #aaa;
+      text-transform: uppercase;
+    }
+
+    select, input[type="range"] {
+      padding: 8px;
+      background: #333;
+      border: 1px solid #555;
+      color: #fff;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    input[type="range"] {
+      padding: 0;
+    }
+
+    .color-preview {
+      width: 40px;
+      height: 40px;
+      border-radius: 4px;
+      border: 2px solid #555;
+    }
+
+    .button-group {
+      grid-column: span 3;
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+
+    #place-btn {
+      background: #2196F3;
+      color: white;
+      flex: 1;
+    }
+
+    #place-btn:hover {
+      background: #1976D2;
+    }
+
+    #accept-btn {
+      background: #4CAF50;
+      color: white;
+      flex: 1;
+    }
+
+    #accept-btn:hover {
+      background: #45a049;
+    }
+
+    #accept-btn:disabled {
+      background: #555;
+      cursor: not-allowed;
+    }
+
+    #clear-placed-btn {
+      background: #f44336;
+      color: white;
+    }
+
+    #clear-placed-btn:hover {
+      background: #d32f2f;
+    }
+
+    #clear-placed-btn:disabled {
+      background: #555;
+      cursor: not-allowed;
+    }
+
+    #picker-preview-container {
+      width: 220px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #picker-preview {
+      width: 220px;
+      height: 220px;
+      background: #000;
+      border-radius: 8px;
+      border: 2px solid #555;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #picker-preview::before {
+      content: 'Animation Preview';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #444;
+      font-size: 11px;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+
+    .preview-controls {
+      display: flex;
+      gap: 5px;
+      justify-content: center;
+    }
+
+    .preview-controls button {
+      padding: 6px 12px;
+      font-size: 11px;
+      background: #444;
+      color: white;
+    }
+
+    .preview-controls button:hover {
+      background: #555;
+    }
+
+    #canvas-area {
+      flex: 1;
+      background: #2a2a2a;
+      border-radius: 8px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      min-height: 0;
+    }
+
+    #playback-controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    #playback-controls button {
+      background: #444;
+      color: white;
+      padding: 8px 16px;
+    }
+
+    #playback-controls button:hover {
+      background: #555;
+    }
+
+    #playback-controls button.active {
+      background: #4CAF50;
+    }
+
+    #timeline-slider {
+      flex: 1;
+    }
+
+    #time-display {
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      min-width: 120px;
+      text-align: right;
+    }
+
+    #preview-section {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* The global preview is a square that fits the available height of the
+       grey canvas-area box, staying 1:1 no matter the window size. */
+    #preview-container {
+      background: #000;
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+      height: 100%;
+      max-width: 100%;
+      aspect-ratio: 1 / 1;
+    }
+
+    #preview-canvas {
+      width: 100%;
+      height: 100%;
+      cursor: move;
+      display: block;
+    }
+
+    #preview-instructions {
+      padding: 15px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 4px;
+      font-size: 12px;
+      color: #aaa;
+      min-width: 200px;
+    }
+
+    #preview-instructions strong {
+      color: #4CAF50;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    #preview-instructions div {
+      margin: 4px 0;
+    }
+
+    .hint {
+      font-size: 11px;
+      color: #888;
+      margin-top: 4px;
+      grid-column: span 3;
+    }
+
+    #frame-count-display {
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      color: #4CAF50;
+      padding: 6px 8px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 4px;
+    }
+
+    #frame-toast {
+      position: absolute;
+      transform: translate(-50%, 0);
+      padding: 6px 12px;
+      background: rgba(0,0,0,0.85);
+      border: 1px solid #4CAF50;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 12px;
+      font-family: 'Courier New', monospace;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      z-index: 10;
+    }
+
+    #frame-toast.show {
+      opacity: 1;
+    }
+
+    #frame-toast .toast-label {
+      color: #4CAF50;
+      font-weight: bold;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="header">
+    <h1>🎆 Ordinals Fireworks Builder</h1>
+    <div class="header-buttons">
+      <button id="new-btn">New</button>
+      <button id="import-btn">Import Project</button>
+      <button id="save-btn">Save Project</button>
+    </div>
+  </div>
+
+  <div id="main">
+    <div id="timeline">
+      <style>
+        #block-builder{background:#15171c;border:1px solid #2a2e37;border-radius:8px;padding:10px;margin-bottom:12px;}
+        #block-builder .bb-title{font-weight:700;font-size:13px;color:#f4b942;margin-bottom:8px;letter-spacing:.3px;}
+        #block-builder .bb-row{display:flex;gap:6px;align-items:center;margin-bottom:6px;}
+        #block-builder input[type=number]{flex:1;min-width:0;background:#0d0f13;color:#e6e6e6;border:1px solid #2a2e37;border-radius:5px;padding:6px;font-family:monospace;}
+        #block-builder button{background:#23262e;color:#e6e6e6;border:1px solid #343845;border-radius:5px;padding:6px 9px;cursor:pointer;font-size:13px;}
+        #block-builder button:hover{background:#2e333d;}
+        #block-builder .bb-nav button{font-weight:700;padding:6px 12px;}
+        #block-builder #bb-status{flex:1;text-align:center;font-size:11px;color:#9aa0ac;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+        #block-builder .bb-listlabel{display:flex;align-items:center;gap:6px;font-size:11px;color:#9aa0ac;margin-top:2px;cursor:pointer;}
+      </style>
+      <div id="block-builder">
+        <div class="bb-title">⚡ Block Builder — Bitcoin July 4th</div>
+        <div class="bb-row">
+          <input type="number" id="bb-height" placeholder="block height">
+          <button id="bb-go" title="Generate this block's show">Go</button>
+          <button id="bb-random" title="Random July-4 block">🎲</button>
+        </div>
+        <div class="bb-row bb-nav">
+          <button id="bb-prev" title="Previous (by rank)">◀</button>
+          <span id="bb-status">Loading July-4 blocks…</span>
+          <button id="bb-next" title="Next (by rank)">▶</button>
+        </div>
+        <label class="bb-listlabel"><input type="checkbox" id="bb-curated" checked> walk curated 250 only</label>
+      </div>
+      <div id="timeline-header">Timeline (Max 15s)</div>
+      <div id="timeline-list"></div>
+      <button id="export-btn">Export Inscription HTML</button>
+    </div>
+
+    <div id="workspace">
+      <div id="picker">
+        <div id="picker-controls">
+          <div class="control-group">
+            <label>Category</label>
+            <select id="animation-category">
+              <option value="body">💥 Body</option>
+              <option value="tail">🔥 Tail</option>
+              <option value="shape">⭕ Shape</option>
+              <option value="background">🖼️ Background</option>
+              <option value="foreground">🎭 Foreground</option>
+              <option value="term">🎆 Term</option>
+            </select>
+            <div id="moon-phase-group" style="display:none;margin-top:8px;">
+              <label style="display:block;white-space:nowrap;">Moon Phase: <span id="moon-phase-value">Full</span></label>
+              <input type="range" id="moon-phase-slider" min="0" max="1" step="0.02" value="0.5" style="width:100%;display:block;box-sizing:border-box;height:26px;">
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label>Animation Type</label>
+            <select id="animation-type">
+              <!-- Populated dynamically based on category -->
+            </select>
+            <div id="moon-prog-group" style="display:none;margin-top:8px;">
+              <label style="display:block;white-space:nowrap;">Moon Position (E→W): <span id="moon-prog-value">Center</span></label>
+              <input type="range" id="moon-prog-slider" min="0" max="1" step="0.02" value="0.5" style="width:100%;display:block;box-sizing:border-box;height:26px;">
+            </div>
+          </div>
+
+          <div class="control-group" id="sub-type-group" style="display: none;">
+            <label>Shape Style</label>
+            <select id="sub-type">
+              <!-- For shapes -->
+            </select>
+          </div>
+
+          <div class="control-group" id="color-group">
+            <label>Color</label>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <input type="color" id="color-picker" value="#FF9632" style="width: 60px; height: 40px; cursor: pointer;">
+              <input type="text" id="color-hex" value="#FF9632" style="flex: 1; font-family: monospace;" maxlength="7">
+            </div>
+          </div>
+
+          <div class="control-group" id="frame-info-group">
+            <label>Animation Length</label>
+            <div id="frame-count-display">Analyzing…</div>
+          </div>
+
+          <div class="control-group" id="color2-group" style="display: none;">
+            <label>Color 2 (Outer)</label>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <input type="color" id="color2-picker" value="#FF6464" style="width: 60px; height: 40px; cursor: pointer;">
+              <input type="text" id="color2-hex" value="#FF6464" style="flex: 1; font-family: monospace;" maxlength="7">
+            </div>
+          </div>
+
+          <div class="control-group" id="speed-group">
+            <label>Speed: <span id="speed-value">1.0</span>x</label>
+            <input type="range" id="speed-slider" min="0.5" max="2" step="0.1" value="1">
+          </div>
+
+          <div class="button-group">
+            <button id="place-btn">Place in Preview</button>
+            <button id="accept-btn" disabled>Accept to Timeline</button>
+            <button id="clear-placed-btn" disabled>Clear Placed</button>
+          </div>
+
+          <div class="hint">
+            1. Choose animation & settings → 2. Place in preview → 3. Position/rotate/scale → 4. Accept to timeline
+          </div>
+        </div>
+
+        <div id="picker-preview-container">
+          <div id="picker-preview">          </div>
+          <div class="preview-controls">
+            <button id="preview-reload">⟳ Reload</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="canvas-area">
+        <div id="playback-controls">
+          <button id="play-btn">▶ Play</button>
+          <button id="pause-btn">⏸ Pause</button>
+          <button id="step-back">⏮ -Frame</button>
+          <button id="step-forward">+Frame ⏭</button>
+          <button id="reset-btn">⏮⏮ Reset</button>          <input type="range" id="timeline-slider" min="0" max="15000" value="0" step="16.67">
+          <div id="time-display">0.00s / 15.00s</div>
+        </div>
+
+        <div id="preview-section">
+          <div id="preview-container">
+            <canvas id="preview-canvas"></canvas>
+            <div id="frame-toast"></div>
+          </div>
+
+          <div id="preview-instructions">
+            <strong>Controls:</strong>
+            <div>Left-click drag: Move</div>
+            <div>Right-click drag: Rotate</div>
+            <div>S + mouse move: Scale</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <!-- === THREE.JS r178 + BLOOM (recursive-inscription model) ===
+         Loaded as ES modules through an import map so the BUILDER matches the
+         final on-chain inscription exactly (WYSIWYG).
+
+         DEV (localhost): the two aliases below point at local copies in ./lib/.
+         INSCRIPTION: swap each target for its recursive /content/<id> URL:
+           three        -> /content/0d013bb60fc5bf5a6c77da7371b07dc162ebc7d7f3af0ff3bd00ae5f0c546445i0   (Wizards of Ord, three.js 0.163 — COMPLETE build; the r178 inscription a4a6… is tree-shaken and lacks Points/PointsMaterial/CanvasTexture/Clock, so it cannot run particle shells)
+           three-bloom  -> /content/<YOUR_BLOOM_BUNDLE_INSCRIPTION_ID>                                   (lib/three-postprocessing-bundle.js, ~5 KB brotli — built from 0.163 jsm to match the core; inscribe once, reuse forever)
+         The bloom add-ons (EffectComposer/UnrealBloomPass/shaders) are NOT
+         inscribed by anyone yet, so we ship our own bundle. -->
+    <!-- Supabase client — wallet-gated cloud save/import/export (see supabase_setup.sql) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "./lib/three.module.js",
+        "three-bloom": "./lib/three-postprocessing-bundle.js"
+      }
+    }
+    </script>
+    <!-- ================================================== -->
+
+    <script>
+    console.log('Builder.html script is loading...');
+
+    // Animation metadata
+    const ANIMATIONS = {
+      risingtail: {
+        name: 'Rising Tail',
+        duration: 2000
+      },
+      palmfrond: {
+        name: 'Palm Frond',
+        duration: 2500
+      },
+      peony: {
+        name: 'Peony Burst',
+        duration: 2000  /* = effects/peony.js FRAMES/FPS (120/60); placed preview == accepted */
+      },
+      palm: { 
+        name: 'Palm', 
+        duration: 2500 
+      },
+      willow: { 
+        name: 'Willow',
+        duration: 3000  /* = effects/willow.js FRAMES/FPS (180/60); placed preview == accepted */
+      },
+      chrysanthemum: { 
+        name: 'Chrysanthemum', 
+        duration: 2000 
+      },
+      crossette: { 
+        name: 'Crossette', 
+        duration: 1800 
+      },
+      strobe: { 
+        name: 'Strobe',
+        duration: 2000  /* = effects/strobe.js FRAMES/FPS (120/60); placed preview == accepted */
+      },
+      pistil: { 
+        name: 'Pistil', 
+        duration: 2200 
+      },
+      brocade: {
+        name: 'Brocade',
+        duration: 2800
+      },
+      dahlia: {
+        name: 'Dahlia',
+        duration: 2400
+      },
+      fallingleaves: {
+        name: 'Falling Leaves',
+        duration: 3200
+      },
+      fish: {
+        name: 'Fish',
+        duration: 1200
+      },
+      spider: {
+        name: 'Spider',
+        duration: 1850  /* = effects/spider.js FRAMES/FPS (111/60); placed preview == accepted */
+      },
+      cracklingrain: {
+        name: 'Crackling Rain',
+        duration: 2400
+      },
+      waterfall: {
+        name: 'Waterfall',
+        duration: 3000  /* = effects/waterfall.js FRAMES/FPS (180/60); placed preview == accepted */
+      },
+      romancandle: {
+        name: 'Roman Candle',
+        duration: 3000
+      },
+      tourbillion: {
+        name: 'Tourbillion',
+        duration: 1800
+      },
+      dragoneggs: {
+        name: 'Dragon Eggs',
+        duration: 2300
+      },
+      comet: {
+        name: 'Comet',
+        duration: 2000
+      }
+    };
+
+    const BACKGROUNDS = {
+      allblack: {
+        name: 'All Black',
+        duration: 15000
+      },
+      navygradient: {
+        name: 'Navy Gradient',
+        duration: 15000
+      },
+      starsblack:  { name: 'Stars (Black)', duration: 15000 },
+      starsnavy:   { name: 'Stars (Navy)',  duration: 15000 },
+      moonblack:   { name: 'Moon Sky (Black)', duration: 15000 },
+      moonnavy:    { name: 'Moon Sky (Navy)',  duration: 15000 },
+      space:       { name: 'Deep Space',    duration: 15000 }
+    };
+
+    const FOREGROUNDS = {
+      blackoverlay: {
+        name: 'Black Overlay',
+        duration: 15000
+      },
+      baseball:  { name: 'Baseball Field',  duration: 15000 },
+      lakeside:  { name: 'Lakeside',        duration: 15000 },
+      football:  { name: 'Football Field',  duration: 15000 },
+      park:      { name: 'Park',            duration: 15000 }
+    };
+
+    // TERM banners — the 4th-of-July word firework (effects/term.js). The chosen
+    // term's text is sampled into sparkling letters. Duration matches term.js.
+    const TERMS = {
+      america250: { name: 'America 250',     text: 'AMERICA 250',     duration: 3500 },
+      seven4250:  { name: '7/4/250',         text: '7/4/250',         duration: 3500 },
+      happy4th:   { name: 'Happy 4th of July', text: 'HAPPY 4TH OF JULY', duration: 2300 },
+      usa:        { name: 'USA',             text: 'USA',             duration: 3500 },
+      happy250th: { name: 'Happy 250th 4th', text: 'HAPPY 250TH 4TH', duration: 2300 }
+    };
+
+    // State
+    let timeline = [];
+    let placedAnimation = null;
+    let isPlaying = false;
+    let currentTime = 0;
+    let isScaling = false;
+    let isDragging = false;
+    let isRotating = false;
+    let dragStart = { x: 0, y: 0 };
+    let projectName = 'Untitled Fireworks';
+
+    // Elements
+    const animationCategory = document.getElementById('animation-category');
+    const animationType = document.getElementById('animation-type');
+    const subTypeGroup = document.getElementById('sub-type-group');
+    const subType = document.getElementById('sub-type');
+    const colorGroup = document.getElementById('color-group');
+    const colorPicker = document.getElementById('color-picker');
+    const colorHex = document.getElementById('color-hex');
+    const color2Group = document.getElementById('color2-group');
+    const color2Picker = document.getElementById('color2-picker');
+    const color2Hex = document.getElementById('color2-hex');
+    const speedSlider = document.getElementById('speed-slider');
+    const speedValue = document.getElementById('speed-value');
+    const placeBtn = document.getElementById('place-btn');
+    const acceptBtn = document.getElementById('accept-btn');
+    const clearPlacedBtn = document.getElementById('clear-placed-btn');
+    const timelineList = document.getElementById('timeline-list');
+    const exportBtn = document.getElementById('export-btn');
+    const saveBtn = document.getElementById('save-btn');
+    const importBtn = document.getElementById('import-btn');
+    const newBtn = document.getElementById('new-btn');
+    const playBtn = document.getElementById('play-btn');
+    const pauseBtn = document.getElementById('pause-btn');
+    const stepBack = document.getElementById('step-back');
+    const stepForward = document.getElementById('step-forward');
+    const resetBtn = document.getElementById('reset-btn');
+    const timelineSlider = document.getElementById('timeline-slider');
+    const timeDisplay = document.getElementById('time-display');
+    const previewCanvas = document.getElementById('preview-canvas');
+    const previewReload = document.getElementById('preview-reload');
+    const frameCountDisplay = document.getElementById('frame-count-display');
+    const frameToast = document.getElementById('frame-toast');
+
+    // ===== Frozen-frame reference system =====
+    // The global preview shows the REAL animation frozen at one of three
+    // lifecycle points. Spacebar wraps between them. The chosen point also
+    // determines how far the firework is pre-rolled when the show starts.
+    const FREEZE_POINTS = ['first', 'largest', 'preFinal'];
+    const FREEZE_LABELS = {
+      first: 'First Frame',
+      largest: 'Largest Frame',
+      preFinal: '10 Before Final'
+    };
+    let freezeIndex = 0; // first option = frame 1 (true first frame); spacebar -> largest -> 3-before-final
+
+    // Resolve {name, duration} metadata for any animation. Shapes have no
+    // ANIMATIONS entry (they all share one effect module, differing only by the
+    // shape param), so synthesize their metadata here.
+    const SHAPE_NAMES = {
+      circle: 'Circle', square: 'Square', triangle: 'Triangle', diamond: 'Diamond',
+      star: 'Star', heart: 'Heart', rocket: 'Rocket', bitcoin: 'Bitcoin ₿'
+    };
+    function resolveAnimData(category, type) {
+      if (category === 'background' && BACKGROUNDS[type]) return BACKGROUNDS[type];
+      if (category === 'foreground' && FOREGROUNDS[type]) return FOREGROUNDS[type];
+      if (category === 'term' && TERMS[type]) return TERMS[type];
+      if (category === 'shape') {
+        return {
+          name: (SHAPE_NAMES[type] || 'Shape') + ' Shape',
+          duration: 2200
+        };
+      }
+      return ANIMATIONS[type];
+    }
+
+    // Update the frame-count UI for the selected effect, read straight from its
+    // Three effect module (FRAMES / FPS).
+    function refreshFrameInfo() {
+      const type = animationType.value;
+      const category = animationCategory.value;
+      if (!type) return;
+      frameCountDisplay.textContent = 'Analyzing…';
+      const t0 = Date.now();
+      (function show() {
+        const kf = isThreeNative({ category, type }) ? keyFramesFor(type) : null;
+        if (!kf) {
+          if (Date.now() - t0 > 5000) { frameCountDisplay.textContent = 'Preview unavailable'; return; }
+          return setTimeout(show, 60);   // module still loading; retry
+        }
+        const secs = (kf.total / kf.fps).toFixed(2);
+        frameCountDisplay.textContent = `${kf.total} frames · ~${secs}s @${kf.fps}fps`;
+      })();
+    }
+
+    console.log('All elements retrieved');
+    console.log('animationCategory:', animationCategory);
+    console.log('animationType:', animationType);
+
+    const previewCtx = previewCanvas.getContext('2d', { willReadFrequently: true });
+
+    // ==================== THREE.JS PREVIEW (r178 + UnrealBloom) ====================
+    // THREE, EffectComposer, RenderPass, UnrealBloomPass are put on window by the
+    // ES-module shim at the end of <body> (it loads them via the import map, which
+    // points at ./lib in dev and /content/<id> on-chain). Nothing here may run
+    // before that shim fires — so we never call init inline; the shim calls
+    // window.startThreePreview() once the libraries are available.
+    let scene, camera, renderer, composer, bloomPass, threeCanvas;
+    // Layer-isolated render: backgrounds and foregrounds live in their OWN scenes
+    // so the fireworks' bloom / tone-map can be tuned hard WITHOUT touching them.
+    //   bgScene  -> rendered with its own bloom, drawn first (base layer)
+    //   scene    -> FIREWORKS only (body/tail/shape/term); own bloom + tone-map,
+    //               composited ADDITIVELY over the background
+    //   fgScene  -> foregrounds (alpha, occluding ground bands), drawn LAST on top
+    // The bg/fg effect MODULES are unchanged — only which scene the host adds them
+    // to changes — so they inscribe and load exactly as before.
+    let bgScene, fgScene, bgComposer, fwBlitQuad;
+    let threeInitialized = false;
+
+    // Fireworks brightness control — three knobs, all FIREWORKS-only (can never
+    // touch the moon/sky):
+    //   FW_BLOOM_RES : the fireworks bloom runs at this FIXED resolution no matter
+    //                  the display size, so the tiny picker, the preview and the
+    //                  fullscreen export all glow the SAME. (UnrealBloom otherwise
+    //                  runs at native buffer res — picker ~220, export ~2160 — which
+    //                  is why higher res read brighter/fuzzier/oversaturated.)
+    //   uKnee / uMax : luminance soft-knee with a hard CEILING. Above uKnee the
+    //                  luminance rolls off and ASYMPTOTES to uMax, so no matter how
+    //                  many layers stack additively the total brightness can never
+    //                  exceed uMax — colour is preserved (chroma ratio kept) instead
+    //                  of washing to white. Below uKnee it's identity.
+    // Keep ALL of these IN SYNC with the export fireworks composer.
+    const FW_BLOOM_RES = 384;
+    // RESOLUTION-INDEPENDENT RENDERING. The whole frame is rendered at this FIXED
+    // internal buffer size and then CSS-stretched to fill whatever display it's on
+    // (preview pane OR a 65" fullscreen export). This is the ONLY way the big screen
+    // looks IDENTICAL to the small "native 576" view instead of turning the soft
+    // gaussian point sprites into giant blobs: every spark rasterises at the SAME
+    // pixel size everywhere, so a huge screen just shows the crisp 576 image scaled
+    // up by the GPU. 1152 = 576 × 2 (the supersample is baked in here, so pixelRatio
+    // is forced to 1). Raise for more detail on huge screens (sprites resolve more
+    // halo → softer/blobbier); lower for a crisper, dottier look. Keep IN SYNC with
+    // the export renderer.
+    const RENDER_RES = 1152;
+    const TONEMAP_SHADER = {
+      uniforms: { tDiffuse: { value: null }, uKnee: { value: 0.30 }, uMax: { value: 0.60 } },
+      vertexShader:
+        'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
+      fragmentShader: [
+        'uniform sampler2D tDiffuse; uniform float uKnee; uniform float uMax; varying vec2 vUv;',
+        'void main(){',
+        '  vec4 t = texture2D(tDiffuse, vUv);',
+        '  vec3 c = t.rgb;',
+        '  float L = dot(c, vec3(0.2126, 0.7152, 0.0722));',
+        '  if (L > uKnee) {',
+        '    float span = max(uMax - uKnee, 1e-3);',
+        '    float Ln = uKnee + span * (1.0 - exp(-(L - uKnee) / span));',
+        '    c *= Ln / max(L, 1e-4);',
+        '  }',
+        '  gl_FragColor = vec4(c, t.a);',
+        '}'
+      ].join('\n')
+    };
+
+    // Full-screen quad that ADDS the fireworks layer's rgb onto whatever is already
+    // on screen (the background). Pure additive (One,One) so fireworks emit light
+    // over the sky; non-firework pixels are black and add nothing. Alpha is left
+    // untouched so the preview's transparent canvas stays correct over the bg.
+    function makeAdditiveBlit() {
+      const mat = new THREE.ShaderMaterial({
+        uniforms: { tDiffuse: { value: null } },
+        vertexShader:
+          'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
+        fragmentShader:
+          'uniform sampler2D tDiffuse; varying vec2 vUv; void main(){ gl_FragColor = vec4(texture2D(tDiffuse, vUv).rgb, 1.0); }',
+        depthTest: false, depthWrite: false, transparent: true,
+        blending: THREE.CustomBlending,
+        blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor,
+        blendEquationAlpha: THREE.AddEquation, blendSrcAlpha: THREE.ZeroFactor, blendDstAlpha: THREE.OneFactor
+      });
+      return new FullScreenQuad(mat);
+    }
+
+    function initThreePreview() {
+      if (threeInitialized) return;
+      if (typeof THREE === 'undefined' || typeof EffectComposer === 'undefined') {
+        console.warn('Three.js modules not ready yet — preview not started.');
+        return;
+      }
+      try {
+        const container = document.getElementById('preview-container');
+
+        scene = new THREE.Scene();     // FIREWORKS layer only
+        bgScene = new THREE.Scene();   // backgrounds (own bloom, drawn first)
+        fgScene = new THREE.Scene();   // foregrounds (alpha, drawn last/on top)
+        // Transparent canvas: the WebGL preview composites over the 2D
+        // #preview-canvas, which now only draws the editing handles.
+
+        camera = new THREE.PerspectiveCamera(50, 1, 0.1, 400);
+        camera.position.set(0, 11, 46);
+        camera.lookAt(0, 12, 0);
+
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setClearColor(0x000000, 0);
+        // pixelRatio = 1: rendering is pinned to the fixed RENDER_RES buffer (the
+        // supersample is baked into RENDER_RES), then CSS-stretched to the container.
+        // Keep IN SYNC with the export renderer.
+        renderer.setPixelRatio(1);
+
+        // Overlay the WebGL canvas ON TOP of the 2D #preview-canvas (which draws
+        // the editing handles below it). pointer-events:none lets placement
+        // clicks pass through to #preview-canvas.
+        threeCanvas = renderer.domElement;
+        threeCanvas.id = 'three-canvas';
+        threeCanvas.style.cssText =
+          'position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none;';
+        container.appendChild(threeCanvas);
+
+        // Match the export pipeline EXACTLY: multisampled + half-float composer
+        // target (crisp edges + no dark-gradient banding through the bloom).
+        // BACKGROUND composer — own bloom, params identical to the old single-pass
+        // pipeline so the moon/sky look EXACTLY as tuned. Renders to screen first.
+        const bgRT = new THREE.WebGLRenderTarget(1, 1, { samples: 4, type: THREE.HalfFloatType });
+        bgComposer = new EffectComposer(renderer, bgRT);
+        bgComposer.addPass(new RenderPass(bgScene, camera));
+        bgComposer.addPass(new UnrealBloomPass(new THREE.Vector2(1, 1), 1.0, 0.3, 0.4));
+
+        // FIREWORKS composer — own bloom + the fireworks-only tone map. Renders
+        // OFFSCREEN (renderToScreen=false); its result is blitted additively over
+        // the background in renderLayers(). strength / radius / threshold + uKnee
+        // are the firework knobs; keep IN SYNC with the export fireworks composer.
+        const previewRT = new THREE.WebGLRenderTarget(1, 1, { samples: 4, type: THREE.HalfFloatType });
+        composer = new EffectComposer(renderer, previewRT);
+        composer.renderToScreen = false;
+        composer.addPass(new RenderPass(scene, camera));
+        // PRE-bloom clamp: tame EXTREME additive overlays (a scaled-down willow,
+        // a big brocade, stacked trailing tails, the dense Term letters) BEFORE the
+        // bloom sees them, so the bloom can't spread runaway brightness into a wide
+        // haze. Same soft-knee shader, but a HIGH ceiling (1.25) so normal cores
+        // still pass through and glow — only the runaway stacks get capped.
+        const preClamp = new ShaderPass(TONEMAP_SHADER);   // ShaderPass clones uniforms
+        preClamp.uniforms.uKnee.value = 0.80; preClamp.uniforms.uMax.value = 1.25;
+        composer.addPass(preClamp);
+        // Fireworks bloom turned WAY down vs the old 1.0/0.3/0.4 — strength low,
+        // threshold high so only genuine cores glow (no wide wash). Its resolution
+        // is pinned to FW_BLOOM_RES below so it looks the same at every display size.
+        bloomPass = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.25, 0.3, 0.70);
+        composer.addPass(bloomPass);
+        composer.addPass(new ShaderPass(TONEMAP_SHADER));   // POST clamp: final ceiling
+        fwBlitQuad = makeAdditiveBlit();
+
+        // Render at the preview's ACTUAL on-screen pixel size (square, native
+        // density) instead of a fixed 576 — so the builder preview is exactly as
+        // sharp as the fullscreen export. updateStyle=false keeps the CSS 100%.
+        function sizePreview() {
+          // Fixed internal buffer (RESOLUTION-INDEPENDENT, mirrors the export). The
+          // canvas CSS is 100% (set above) so it stretches to the container; pinning
+          // the render to RENDER_RES means the preview shows EXACTLY what the export
+          // shows at any display size. false = don't let setSize overwrite the CSS.
+          renderer.setSize(RENDER_RES, RENDER_RES, false);
+          composer.setSize(RENDER_RES, RENDER_RES);
+          bgComposer.setSize(RENDER_RES, RENDER_RES);
+          // Pin the FIREWORKS bloom to a FIXED resolution (after composer.setSize,
+          // which would otherwise scale it to the supersampled buffer). This makes
+          // the glow identical across picker / preview / export.
+          bloomPass.setSize(FW_BLOOM_RES, FW_BLOOM_RES);
+        }
+        sizePreview();
+        window.addEventListener('resize', sizePreview);
+
+        threeInitialized = true;
+        console.log('✅ Three.js 0.163 + UnrealBloom initialized');
+        animateThree();
+        // Now that THREE is available, refresh the picker so the current
+        // selection shows in its WebGL mini-preview.
+        if (typeof updatePickerPreview === 'function') updatePickerPreview();
+      } catch (e) {
+        console.error('Three.js init failed:', e);
+        threeInitialized = false;
+      }
+    }
+
+    // ---- Three-native shell registry --------------------------------------
+    // Each shell type is its OWN inscribed ES module. The builder keeps NO
+    // per-shell look/physics data here — only the module pointer + generic
+    // orchestration below. For inscription, swap `module` for the recursive
+    // '/content/<id>' URL (see INSCRIPTION_IDS); exported shows load the same
+    // effect modules.
+    // Bump this whenever an effect file changes to force browsers past the
+    // sticky local-file cache (dev only; ignored for /content/ inscription URLs).
+    const FX_CACHE_BUST = '20260621-skies';
+    const THREE_EFFECTS = {
+      peony:         { module: './effects/peony.js'         /* inscription: '/content/<PEONY_JS_ID>'         */ },
+      willow:        { module: './effects/willow.js'        /* inscription: '/content/<WILLOW_JS_ID>'        */ },
+      waterfall:     { module: './effects/waterfall.js'     /* inscription: '/content/<WATERFALL_JS_ID>'     */ },
+      chrysanthemum: { module: './effects/chrysanthemum.js' /* inscription: '/content/<CHRYSAN_JS_ID>'       */ },
+      dahlia:        { module: './effects/dahlia.js'        /* inscription: '/content/<DAHLIA_JS_ID>'        */ },
+      pistil:        { module: './effects/pistil.js'        /* inscription: '/content/<PISTIL_JS_ID>'        */ },
+      strobe:        { module: './effects/strobe.js'        /* inscription: '/content/<STROBE_JS_ID>'        */ },
+      dragoneggs:    { module: './effects/dragoneggs.js'    /* inscription: '/content/<DRAGONEGGS_JS_ID>'    */ },
+      spider:        { module: './effects/spider.js'        /* inscription: '/content/<SPIDER_JS_ID>'        */ },
+      fish:          { module: './effects/fish.js'          /* inscription: '/content/<FISH_JS_ID>'          */ },
+      palm:          { module: './effects/palm.js'          /* inscription: '/content/<PALM_JS_ID>'          */ },
+      brocade:       { module: './effects/brocade.js'       /* inscription: '/content/<BROCADE_JS_ID>'       */ },
+      fallingleaves: { module: './effects/fallingleaves.js' /* inscription: '/content/<FALLINGLEAVES_JS_ID>' */ },
+      cracklingrain: { module: './effects/cracklingrain.js' /* inscription: '/content/<CRACKLINGRAIN_JS_ID>' */ },
+      crossette:     { module: './effects/crossette.js'     /* inscription: '/content/<CROSSETTE_JS_ID>'     */ },
+      tourbillion:   { module: './effects/tourbillion.js'   /* inscription: '/content/<TOURBILLION_JS_ID>'   */ },
+      romancandle:   { module: './effects/romancandle.js'   /* inscription: '/content/<ROMANCANDLE_JS_ID>'   */ },
+      // TAIL effects (category 'tail') -- rising trails that climb to the burst point.
+      risingtail:    { module: './effects/risingtail.js'    /* inscription: '/content/<RISINGTAIL_JS_ID>'    */ },
+      comet:         { module: './effects/comet.js'         /* inscription: '/content/<COMET_JS_ID>'         */ },
+      palmfrond:     { module: './effects/palmfrond.js'     /* inscription: '/content/<PALMFROND_JS_ID>'     */ },
+      // SHAPE effects (category 'shape'). circle keeps the proven pearls ring;
+      // the rest (incl. the hollow ₿) are traced by the generic effects/shape.js
+      // (host passes opts.shape).
+      circle:        { module: './effects/pearls.js'        /* inscription: '/content/<CIRCLE_JS_ID>'        */ },
+      square:        { module: './effects/shape.js'         /* inscription: '/content/<SHAPE_JS_ID>'         */ },
+      triangle:      { module: './effects/shape.js'         /* inscription: '/content/<SHAPE_JS_ID>'         */ },
+      diamond:       { module: './effects/shape.js'         /* inscription: '/content/<SHAPE_JS_ID>'         */ },
+      star:          { module: './effects/shape.js'         /* inscription: '/content/<SHAPE_JS_ID>'         */ },
+      heart:         { module: './effects/shape.js'         /* inscription: '/content/<SHAPE_JS_ID>'         */ },
+      rocket:        { module: './effects/shape.js'         /* inscription: '/content/<SHAPE_JS_ID>'         */ },
+      bitcoin:       { module: './effects/shape.js'         /* inscription: '/content/<SHAPE_JS_ID>'         */ },
+      // BACKGROUND effects (category 'background') -- full-frame planes behind the shells.
+      allblack:      { module: './effects/bg_allblack.js'     /* inscription: '/content/<BG_ALLBLACK_JS_ID>'     */ },
+      navygradient:  { module: './effects/bg_navygradient.js' /* inscription: '/content/<BG_NAVYGRADIENT_JS_ID>' */ },
+      // night-sky starfields (+ optional moon) -- all share bg_starfield.js, tone/moon via opts.
+      starsblack:    { module: './effects/bg_starfield.js'    /* inscription: '/content/<BG_STARFIELD_JS_ID>'    */ },
+      starsnavy:     { module: './effects/bg_starfield.js'    /* inscription: '/content/<BG_STARFIELD_JS_ID>'    */ },
+      moonblack:     { module: './effects/bg_starfield.js'    /* inscription: '/content/<BG_STARFIELD_JS_ID>'    */ },
+      moonnavy:      { module: './effects/bg_starfield.js'    /* inscription: '/content/<BG_STARFIELD_JS_ID>'    */ },
+      space:         { module: './effects/bg_space.js'        /* inscription: '/content/<BG_SPACE_JS_ID>'        */ },
+      // FOREGROUND effects (category 'foreground') -- drawn in front of the shells.
+      blackoverlay:  { module: './effects/fg_blackoverlay.js' /* inscription: '/content/<FG_BLACKOVERLAY_JS_ID>' */ },
+      baseball:      { module: './effects/fg_baseball.js'     /* inscription: '/content/<FG_BASEBALL_JS_ID>'     */ },
+      lakeside:      { module: './effects/fg_lakeside.js'     /* inscription: '/content/<FG_LAKESIDE_JS_ID>'     */ },
+      football:      { module: './effects/fg_football.js'     /* inscription: '/content/<FG_FOOTBALL_JS_ID>'     */ },
+      park:          { module: './effects/fg_park.js'         /* inscription: '/content/<FG_PARK_JS_ID>'         */ },
+      // TERM word-firework (category 'term') -- all share term.js; text/colour via opts.
+      america250:    { module: './effects/term.js'            /* inscription: '/content/<TERM_JS_ID>'            */ },
+      seven4250:     { module: './effects/term.js'            /* inscription: '/content/<TERM_JS_ID>'            */ },
+      happy4th:      { module: './effects/term.js'            /* inscription: '/content/<TERM_JS_ID>'            */ },
+      usa:           { module: './effects/term.js'            /* inscription: '/content/<TERM_JS_ID>'            */ },
+      happy250th:    { module: './effects/term.js'            /* inscription: '/content/<TERM_JS_ID>'            */ }
+    };
+    // Which star background uses which tone, and which carry a moon. tone/moon are
+    // derived from the type key (not stored per-anim) and threaded into create().
+    const BG_TONE = { starsblack: 'black', starsnavy: 'navy', moonblack: 'black', moonnavy: 'navy' };
+    const BG_HAS_MOON = { moonblack: true, moonnavy: true };
+    // Build the extra create()-opts a type needs beyond color/x/y/scale/shape:
+    // background tone + moon params + compass facing, or the term text. Used by
+    // the live preview, the picker, AND serialized into the export (JSON-safe).
+    function effectExtras(anim) {
+      const o = {};
+      const tone = BG_TONE[anim.type];
+      if (tone) o.tone = tone;
+      if (BG_HAS_MOON[anim.type]) o.moon = {
+        phase:   anim.moonPhase   != null ? anim.moonPhase   : 0.5,
+        prog:    anim.moonProg    != null ? anim.moonProg    : 0.5,
+        visible: anim.moonVisible != null ? anim.moonVisible : true
+      };
+      if (anim.facing != null) o.facing = anim.facing;
+      if (anim.seed   != null) o.seed   = anim.seed;
+      if (TERMS[anim.type]) o.term = anim.term || TERMS[anim.type].text || '';
+      return o;
+    }
+    // ---- On-chain inscription IDs for EXPORT -------------------------------
+    // Fill each in AS YOU INSCRIBE that file. A blank value makes the exported
+    // show fall back to that dependency's LOCAL file, so you can test any mix of
+    // on-chain + local (e.g. on-chain three.js + bloom, local effects, then flip
+    // effects one at a time as you inscribe them). Keyed by library name / effect
+    // module filename — effects that share a module share one id (e.g. every
+    // polygon shape uses shape.js). The export turns a non-blank id into a full
+    // CONTENT_BASE + id URL (see generateInscription).
+    const INSCRIPTION_IDS = {
+      'three':                          '0d013bb60fc5bf5a6c77da7371b07dc162ebc7d7f3af0ff3bd00ae5f0c546445i0', // three.js r0.163 (already on-chain)
+      'three-postprocessing-bundle.js': '',   // bloom add-on — inscribe lib/three-postprocessing-bundle.js, paste id
+      // effects/*.js — paste each id as you inscribe it:
+      'peony.js': '', 'willow.js': '', 'waterfall.js': '', 'chrysanthemum.js': '',
+      'dahlia.js': '', 'pistil.js': '', 'strobe.js': '', 'dragoneggs.js': '',
+      'spider.js': '', 'fish.js': '', 'palm.js': '', 'brocade.js': '',
+      'fallingleaves.js': '', 'cracklingrain.js': '', 'crossette.js': '',
+      'tourbillion.js': '', 'romancandle.js': '', 'risingtail.js': '', 'comet.js': '',
+      'palmfrond.js': '', 'pearls.js': '', 'shape.js': '',
+      'bg_allblack.js': '', 'bg_navygradient.js': '', 'fg_blackoverlay.js': '',
+      'bg_starfield.js': '', 'bg_space.js': '', 'term.js': '',
+      'fg_baseball.js': '', 'fg_lakeside.js': '', 'fg_football.js': '', 'fg_park.js': ''
+    };
+    // Off-chain base so the exported file can pull inscribed content while you
+    // test locally. For the FINAL recursive inscription of the exported show,
+    // change this to the recursive hook '/content/' instead.
+    const CONTENT_BASE = 'https://ordinals.com/content/';
+    function moduleBasename(p) { return p.slice(p.lastIndexOf('/') + 1); }
+
+    function isThreeNative(anim) {
+      if (!anim || !THREE_EFFECTS[anim.type]) return false;
+      if (anim.category === 'body') return true;
+      if (anim.category === 'tail') return true;
+      // All SHAPES are Three-native (each has a THREE_EFFECTS entry, incl. ₿).
+      if (anim.category === 'shape') return true;
+      // Backgrounds & foregrounds are Three-native once they have a module.
+      if (anim.category === 'background') return true;
+      if (anim.category === 'foreground') return true;
+      if (anim.category === 'term') return true;
+      return false;
+    }
+
+    // Lazy-load + cache effect modules. Returns the module synchronously once
+    // ready, or null while still loading (the next frame picks it up). Each
+    // type is fetched at most once.
+    const _fxMod = new Map();        // type -> loaded module
+    const _fxLoading = new Set();
+    function effectModule(type) {
+      if (_fxMod.has(type)) return _fxMod.get(type);
+      const def = THREE_EFFECTS[type];
+      if (def && !_fxLoading.has(type)) {
+        _fxLoading.add(type);
+        // Dev-only cache-bust: local effect files are cached so aggressively that
+        // edits "silently don't show" even after Ctrl+F5. Append a version query so
+        // the browser refetches the current file. (No-op for inscription /content/
+        // URLs, which are content-addressed and immutable.)
+        const url = def.module.startsWith('.') ? def.module + '?v=' + FX_CACHE_BUST : def.module;
+        import(url)
+          .then(m => _fxMod.set(type, m))
+          .catch(e => console.error('Three effect failed to load:', type, e))
+          .finally(() => _fxLoading.delete(type));
+      }
+      return null;
+    }
+
+    // ---- Per-effect KEY FRAMES (computed, true frame numbers, per type) ------
+    // The three spacebar options are NOT arbitrary %; they are computed by
+    // sampling the real effect frame-by-frame:
+    //   first  = frame 1            (the trimmed colour burst, never the white blob)
+    //   peak   = frame of max width x brightness  (differs per shell type)
+    //   preEnd = FRAMES - 3
+    // Cached per type once the module is loaded.
+    const _keyFrames = new Map();
+    function keyFramesFor(type) {
+      if (_keyFrames.has(type)) return _keyFrames.get(type);
+      const mod = effectModule(type);
+      if (!mod || typeof mod.create !== 'function') return null;
+      const fps = mod.FPS || 60;
+      const total = mod.FRAMES || Math.max(2, Math.round((mod.DURATION || 2000) / 1000 * fps));
+      let peak;
+      if (mod.PEAK_FRAME) {
+        peak = Math.min(total, Math.max(1, mod.PEAK_FRAME));   // effect-declared peak wins
+      } else {
+        const probe = mod.create({ color: '#ffffff', x: 0, y: 0, z: 0, scale: 1 });
+        peak = 1; let best = -1;
+        for (let f = 1; f <= total; f++) {
+          probe.setFrame(f);
+          const s = widthBrightnessScore(probe);
+          if (s > best) { best = s; peak = f; }
+        }
+        probe.dispose();
+      }
+      const kf = { first: 1, peak, preEnd: Math.max(1, total - 9), total, fps }; // 10th-from-last
+      _keyFrames.set(type, kf);
+      return kf;
+    }
+    // Width x brightness of a particle effect, read straight from its geometry.
+    function widthBrightnessScore(inst) {
+      const g = inst.object && inst.object.geometry;
+      const pa = g && g.attributes.position && g.attributes.position.array;
+      if (!pa) return 0;
+      const ca = g.attributes.color && g.attributes.color.array;
+      const n = pa.length / 3;
+      let cx = 0, cy = 0, cz = 0;
+      for (let i = 0; i < pa.length; i += 3) { cx += pa[i]; cy += pa[i+1]; cz += pa[i+2]; }
+      cx /= n; cy /= n; cz /= n;
+      let rad = 0, bright = 0;
+      for (let i = 0; i < pa.length; i += 3) {
+        const dx = pa[i]-cx, dy = pa[i+1]-cy, dz = pa[i+2]-cz;
+        rad += Math.sqrt(dx*dx + dy*dy + dz*dz);
+        if (ca) bright += ca[i] + ca[i+1] + ca[i+2];
+      }
+      const op = (inst.object.material && inst.object.material.opacity != null) ? inst.object.material.opacity : 1;
+      return (rad / n) * (ca ? bright / n : 1) * op;
+    }
+    // freeze-point name -> our computed key frame.
+    const FREEZE_TO_KEY = { first: 'first', largest: 'peak', preFinal: 'preEnd' };
+    function freezeFrame(type, freeze) {
+      const kf = keyFramesFor(type);
+      if (!kf) return 1;
+      return kf[FREEZE_TO_KEY[freeze] || 'peak'] || 1;
+    }
+
+    // Map a point in the 576px canvas space to Three world coords. The camera
+    // (fov 50, z=46, look-at y=12) sees a ~42.9-unit square at the z=0 plane.
+    const VIEW_SPAN = 42.9, VIEW_CENTER_Y = 12;
+    function worldFromCanvas(x, y) {
+      return {
+        x: (x / 576 - 0.5) * VIEW_SPAN,
+        y: VIEW_CENTER_Y + (0.5 - y / 576) * VIEW_SPAN
+      };
+    }
+
+    // Active Three fireworks, keyed by timeline-anim id (or 'placed'). Each
+    // entry wraps the {object,setFrame,dispose} an effect module returns; the
+    // builder owns adding/removing the object from the scene.
+    const threeActive = new Map();
+    function threeSig(anim) {
+      // NOTE: moonPhase/moonProg are deliberately NOT in the signature — they're
+      // applied LIVE via inst.setSky() (no rebuild) so dragging the moon sliders
+      // stays smooth instead of disposing/recreating the sky every tick.
+      return [anim.type, anim.color, anim.x, anim.y, anim.scale, anim.startTime, anim.duration,
+        anim.term, anim.moonVisible, anim.facing].join('|');
+    }
+    // Pick the layer scene for an effect: backgrounds -> bgScene, foregrounds ->
+    // fgScene, everything else (body/tail/shape/term) -> the fireworks scene.
+    function sceneFor(anim) {
+      if (anim.category === 'background') return bgScene;
+      if (anim.category === 'foreground') return fgScene;
+      return scene;
+    }
+    function disposeEntry(entry) {
+      const obj = entry.pivot || entry.inst.object;
+      if (obj.parent) obj.parent.remove(obj); else scene.remove(obj);
+      entry.inst.dispose();
+    }
+    function ensureThreeAnim(anim, key, isPlaced) {
+      const mod = effectModule(anim.type);
+      if (!mod) return;                             // still loading; retry next frame
+      const kf = keyFramesFor(anim.type);
+      const fps = (kf && kf.fps) || mod.FPS || 60;
+      const total = (kf && kf.total) || mod.FRAMES || 120;
+      // Background/foreground are static full-show layers: they stay on for their
+      // whole timeline slot (clamp the frame) instead of disposing when the frame
+      // count is exceeded.
+      const isLayer = anim.category === 'background' || anim.category === 'foreground' || anim.category === 'term';
+      // The chosen freeze frame is where the animation STARTS in the timeline.
+      const startF = (anim.startFrame && anim.startFrame > 0) ? anim.startFrame : 1;
+      let frame, active;
+      if (isPlaced) {
+        // Being positioned: show the freeze-selected key frame (spacebar cycles).
+        frame = freezeFrame(anim.type, anim.freeze);
+        active = true;
+      } else {
+        // Accepted: begin at startF and play forward; inactive before its start.
+        // Speed scales how fast frames advance: 1.5x burns 1.5 frames per real
+        // frame, so the effect reaches `total` sooner (shorter overall length),
+        // matching the duration math elsewhere.
+        const speed = anim.speed || 1;
+        const elapsed = (currentTime - anim.startTime) / 1000;
+        frame = startF + Math.round(elapsed * fps * speed);
+        if (isLayer) {
+          active = elapsed >= 0 && (currentTime - anim.startTime) <= anim.duration;
+          frame = Math.max(1, Math.min(total, frame));
+        } else {
+          active = elapsed >= 0 && frame <= total;
+        }
+      }
+      let entry = threeActive.get(key);
+      if (!active || frame < 1 || frame > total) {  // outside its active window
+        if (entry) { disposeEntry(entry); threeActive.delete(key); }
+        return;
+      }
+      const sig = threeSig(anim);
+      if (!entry || entry.sig !== sig) {
+        if (entry) disposeEntry(entry);
+        const w = worldFromCanvas(anim.x, anim.y);
+        const inst = mod.create(Object.assign({ color: anim.color, x: w.x, y: w.y, z: 0, scale: anim.scale || 1, shape: anim.shape }, effectExtras(anim)));
+        // Never frustum-cull: an effect's bounding sphere is computed from its
+        // frame-1 positions (e.g. a tail's off-screen start), which would wrongly
+        // cull the WHOLE object even while its particles animate into view.
+        inst.object.frustumCulled = false;
+        inst.object.traverse(o => { o.frustumCulled = false; });
+        // Wrap in a pivot group so right-mouse rotation spins the WHOLE effect
+        // in-plane (Z axis) around a fixed point -- including its baked-in local
+        // gravity. A waterfall rotated 90deg therefore "falls sideways" (same
+        // animation, just turned) instead of being re-pulled straight down.
+        //   - Bodies pivot at the burst point (anim.x, anim.y == click == w).
+        //   - TAILS pivot at their END (burst) point too -- which for a tail is
+        //     also w (inst.end === [anim.x, anim.y]). The burst point is the
+        //     fixed anchor the user clicks/places, so BOTH scaling (start slides
+        //     toward/away from end) and rotation (start swings around end) keep
+        //     the red end dot planted and move only the green start dot. This
+        //     matches the placement markers and the mouse interaction, which both
+        //     measure relative to anim.x/y. (Pivoting at the START -- which itself
+        //     moves when you scale -- made rotate+scale fight each other.)
+        // The effect bakes its origin into the particle positions and leaves
+        // `object` at world (0,0,0), so we offset the object back by -pp to keep
+        // its baked world position unchanged.
+        const pp = w;
+        const pivot = new THREE.Group();
+        pivot.position.set(pp.x, pp.y, 0);
+        inst.object.position.set(-pp.x, -pp.y, 0);
+        pivot.add(inst.object);
+        sceneFor(anim).add(pivot);   // route to bg / fireworks / fg layer
+        entry = { inst, pivot, sig };
+        threeActive.set(key, entry);
+      }
+      // In-plane rotation, screen-clockwise to match the 2D placement / export.
+      entry.pivot.rotation.z = -(anim.rotation || 0) * Math.PI / 180;
+      entry.inst.setFrame(frame);
+    }
+
+    // Sync the Three scene to the timeline at the current playback time.
+    function syncThreeTimeline() {
+      const seen = new Set();
+      // While a singleton LAYER (background/foreground) or the term is being PLACED,
+      // hide the existing timeline one of the SAME category so the preview doesn't
+      // stack two backgrounds -- which darkens the frame, or leaves the old stars/moon
+      // shining over the new sky. This mirrors the singleton-replace done on Accept.
+      const suppressCategory = (placedAnimation &&
+        (placedAnimation.category === 'background' ||
+         placedAnimation.category === 'foreground' ||
+         placedAnimation.category === 'term')) ? placedAnimation.category : null;
+      timeline.forEach(anim => {
+        if (!isThreeNative(anim)) return;
+        if (suppressCategory && anim.category === suppressCategory) return;
+        seen.add(anim.id);
+        ensureThreeAnim(anim, anim.id, false);
+      });
+      if (placedAnimation && isThreeNative(placedAnimation)) {
+        seen.add('placed');
+        ensureThreeAnim(placedAnimation, 'placed', true);
+      }
+      // green/red start-&-end markers while a tail is being positioned (overlay only)
+      let markerInst = null;
+      if (placedAnimation && placedAnimation.category === 'tail' && isThreeNative(placedAnimation)) {
+        const e = threeActive.get('placed');
+        if (e && e.inst && e.inst.start) markerInst = e.inst;
+      }
+      if (markerInst) showPlacementMarkers(markerInst, placedAnimation && placedAnimation.rotation); else hidePlacementMarkers();
+      for (const key of [...threeActive.keys()]) {
+        if (!seen.has(key)) { disposeEntry(threeActive.get(key)); threeActive.delete(key); }
+      }
+    }
+
+
+    // ---- Placement markers (overlay only) -------------------------------
+    // While a TAIL is being placed, show a GREEN dot at its start and a RED dot
+    // at its end so the user can see where the trail begins and ends. These are
+    // builder-only overlays with FIXED green/red (they ignore the chosen color);
+    // they live only in the builder scene and are never part of the inscribed
+    // effect, so the deployed/exported show uses the real chosen color.
+    // Markers are solid SPHERE MESHES (not Points) so they render unconditionally
+    // through the bloom composer -- depthTest off + high renderOrder = always on
+    // top, frustumCulled off = never culled. Bright green/red, so bloom makes them
+    // glow and stand out over the effect.
+    let _markers = null;
+    function ensureMarkers() {
+      if (_markers) return _markers;
+      const mk = (hex) => {
+        const geo = new THREE.SphereGeometry(0.5, 16, 12);
+        const mat = new THREE.MeshBasicMaterial({
+          color: new THREE.Color(hex), depthTest: false, depthWrite: false,
+          transparent: true, toneMapped: false
+        });
+        const m = new THREE.Mesh(geo, mat);
+        m.visible = false; m.renderOrder = 1000; m.frustumCulled = false; scene.add(m);
+        return m;
+      };
+      _markers = { start: mk('#00ff44'), end: mk('#ff1133') };
+      return _markers;
+    }
+    function setMarker(mesh, xyz) {
+      if (!xyz) { mesh.visible = false; return; }
+      mesh.position.set(xyz[0], xyz[1], xyz[2]); mesh.visible = true;
+    }
+    // Rotate a point around a pivot in the XY plane (screen-clockwise, matching the
+    // effect's pivot.rotation.z) so a rotated tail's end marker tracks the burst.
+    function rotateXYAround(p, pivot, deg) {
+      if (!p || !pivot) return p;
+      const a = -(deg || 0) * Math.PI / 180;
+      const dx = p[0] - pivot[0], dy = p[1] - pivot[1];
+      const c = Math.cos(a), s = Math.sin(a);
+      return [pivot[0] + dx * c - dy * s, pivot[1] + dx * s + dy * c, p[2]];
+    }
+    function showPlacementMarkers(inst, deg) {
+      const m = ensureMarkers();
+      // END (burst, red) is the fixed pivot/anchor; START (green) orbits it as the
+      // tail is rotated -- matching the effect pivot (pp = end = w) above.
+      setMarker(m.end,   inst && inst.end);
+      setMarker(m.start, inst && inst.start ? rotateXYAround(inst.start, inst.end, deg) : null);
+    }
+    function hidePlacementMarkers() {
+      if (!_markers) return;
+      _markers.start.visible = false; _markers.end.visible = false;
+    }
+
+    // Composite the three layers: background (own bloom) -> fireworks (own bloom +
+    // tone map, added on top) -> foreground (alpha, occludes). Keep IN SYNC with
+    // the export loop().
+    function renderLayers() {
+      renderer.autoClear = true;
+      bgComposer.render();                                   // background -> screen
+      composer.render();                                    // fireworks -> offscreen RT
+      renderer.setRenderTarget(null);
+      renderer.autoClear = false;
+      fwBlitQuad.material.uniforms.tDiffuse.value = composer.readBuffer.texture;
+      fwBlitQuad.render(renderer);                          // ADD fireworks over bg
+      renderer.render(fgScene, camera);                    // foreground on top (occludes)
+      renderer.autoClear = true;
+    }
+
+    function animateThree() {
+      if (!threeInitialized) return;
+      requestAnimationFrame(animateThree);
+      syncThreeTimeline();
+      renderLayers();
+    }
+
+    function initPreview() { initThreePreview(); }
+    // Called by the module shim AFTER the THREE libraries are on window.
+    window.startThreePreview = initPreview;
+
+
+    // ---- Picker mini-preview (Three) -------------------------------------
+    // A second small WebGL view that loops the SELECTED effect so the picker
+    // matches the global preview (same effect module, same bloom).
+    let pkScene, pkCamera, pkRenderer, pkComposer, pkCanvas, pkClock, pkInit = false;
+    let pkInst = null, pkType = null, pkColor = null, pkFrame = 1, pkFrames = 120, pkFps = 60;
+
+    function initPickerThree() {
+      if (pkInit) return;
+      if (typeof THREE === 'undefined' || typeof EffectComposer === 'undefined') return;
+      try {
+        const host = document.getElementById('picker-preview');
+        const sz = Math.max(2, host.clientWidth || 220);
+        pkScene = new THREE.Scene();
+        pkCamera = new THREE.PerspectiveCamera(50, 1, 0.1, 400);
+        pkCamera.position.set(0, 12, 46); pkCamera.lookAt(0, 12, 0);
+        pkRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        pkRenderer.setSize(sz, sz);
+        pkRenderer.setClearColor(0x05010f, 1); // opaque night sky (standalone preview)
+        pkRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        pkCanvas = pkRenderer.domElement;
+        pkCanvas.id = 'picker-three';
+        pkCanvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;display:none;';
+        host.appendChild(pkCanvas);
+        pkComposer = new EffectComposer(pkRenderer);
+        pkComposer.addPass(new RenderPass(pkScene, pkCamera));
+        pkComposer.addPass(new UnrealBloomPass(new THREE.Vector2(sz, sz), 1.0, 0.3, 0.4));
+        pkClock = new THREE.Clock();
+        pkInit = true;
+        pkAnimate();
+      } catch (e) { console.error('Picker Three init failed:', e); pkInit = false; }
+    }
+
+    function pkClearInst() {
+      if (pkInst) { pkScene.remove(pkInst.object); pkInst.dispose(); pkInst = null; }
+    }
+
+    // Show the Three picker for a three-native type; returns false if unavailable.
+    function pickerShowThree(type, color) {
+      initPickerThree();
+      if (!pkInit) return false;
+      const mod = effectModule(type);   // kicks off load if needed
+      pkType = type; pkColor = color;
+      // Back a foreground with the same dark night sky used in the show so the
+      // pure-black ground band reads as a darker shadow (not against blue).
+      pkRenderer.setClearColor(type === 'space' ? 0x000000 : FOREGROUNDS[type] ? 0x0a0c14 : 0x05010f, 1);
+      pkFrames = (mod && mod.FRAMES) || 120;
+      pkFps = (mod && mod.FPS) || 60;
+      pkClearInst(); pkFrame = 1;        // restart with the new color/type
+      pkCanvas.style.display = 'block';
+      return true;
+    }
+
+    function pkAnimate() {
+      if (!pkInit) return;
+      requestAnimationFrame(pkAnimate);
+      if (pkCanvas.style.display === 'none') return;
+      const dt = Math.min(0.05, pkClock.getDelta());
+      const mod = effectModule(pkType);
+      if (mod) {
+        if (!pkInst) {
+          pkInst = mod.create(Object.assign({ color: pkColor, x: 0, y: 12, z: 0, shape: pkType }, effectExtras({ type: pkType })));
+          pkScene.add(pkInst.object);
+          pkFrames = mod.FRAMES || pkFrames; pkFps = mod.FPS || pkFps; pkFrame = 1;
+        }
+        pkFrame += dt * pkFps;
+        if (pkFrame > pkFrames + pkFps * 0.4) { pkClearInst(); pkFrame = 1; }   // gap, then replay
+        else if (pkInst) pkInst.setFrame(Math.min(pkFrames, Math.max(1, Math.round(pkFrame))));
+      }
+      pkComposer.render();
+    }
+    // ==================== END THREE.JS SETUP ====================
+
+    // Initialize canvases with fixed 576x576 size
+    function initCanvases() {
+      previewCanvas.width = 576;
+      previewCanvas.height = 576;
+      if (timeline.length > 0 || placedAnimation) {
+        drawPreview();
+      }
+    }
+
+    window.addEventListener('resize', initCanvases);
+    initCanvases();
+
+    // Category change handler - populate animation dropdown
+    console.log('Setting up category change handler...');
+    animationCategory.addEventListener('change', () => {
+      console.log('Category changed to:', animationCategory.value);
+      const category = animationCategory.value;
+      animationType.innerHTML = '';
+
+      if (category === 'body') {
+        console.log('Populating body animations...');
+        subTypeGroup.style.display = 'none';
+        const bodyAnims = {
+          peony: 'Peony', chrysanthemum: 'Chrysanthemum', palm: 'Palm', willow: 'Willow',
+          crossette: 'Crossette', strobe: 'Strobe', pistil: 'Pistil (2-color)', brocade: 'Brocade',
+          dahlia: 'Dahlia', fallingleaves: 'Falling Leaves', fish: 'Fish', spider: 'Spider',
+          cracklingrain: 'Crackling Rain', waterfall: 'Waterfall',
+          romancandle: 'Roman Candle', tourbillion: 'Tourbillion', dragoneggs: 'Dragon Eggs'
+        };
+        Object.keys(bodyAnims).forEach(key => {
+          const opt = document.createElement('option');
+          opt.value = key;
+          opt.textContent = bodyAnims[key];
+          animationType.appendChild(opt);
+        });
+      } else if (category === 'tail') {
+        subTypeGroup.style.display = 'none';
+        const tailAnims = { risingtail: 'Rising Tail', comet: 'Comet', palmfrond: 'Palm Frond' };
+        Object.keys(tailAnims).forEach(key => {
+          const opt = document.createElement('option');
+          opt.value = key;
+          opt.textContent = tailAnims[key];
+          animationType.appendChild(opt);
+        });
+      } else if (category === 'shape') {
+        // Shapes live directly in this (the 2nd) dropdown -- no third dropdown.
+        subTypeGroup.style.display = 'none';
+        const shapeAnims = {
+          circle: 'Circle', square: 'Square', triangle: 'Triangle', diamond: 'Diamond',
+          star: 'Star', heart: 'Heart', rocket: 'Rocket', bitcoin: 'Bitcoin ₿'
+        };
+        Object.keys(shapeAnims).forEach(key => {
+          const opt = document.createElement('option');
+          opt.value = key;
+          opt.textContent = shapeAnims[key];
+          animationType.appendChild(opt);
+        });
+      } else if (category === 'background') {
+        subTypeGroup.style.display = 'none';
+        animationType.innerHTML = '';
+        Object.keys(BACKGROUNDS).forEach(key => {
+          const opt = document.createElement('option');
+          opt.value = key;
+          opt.textContent = BACKGROUNDS[key].name;
+          animationType.appendChild(opt);
+        });
+      } else if (category === 'foreground') {
+        subTypeGroup.style.display = 'none';
+        animationType.innerHTML = '';
+        Object.keys(FOREGROUNDS).forEach(key => {
+          const opt = document.createElement('option');
+          opt.value = key;
+          opt.textContent = FOREGROUNDS[key].name;
+          animationType.appendChild(opt);
+        });
+      } else if (category === 'term') {
+        subTypeGroup.style.display = 'none';
+        animationType.innerHTML = '';
+        Object.keys(TERMS).forEach(key => {
+          const opt = document.createElement('option');
+          opt.value = key;
+          opt.textContent = TERMS[key].name;
+          animationType.appendChild(opt);
+        });
+      }
+
+      // Trigger animation type change
+      animationType.dispatchEvent(new Event('change'));
+    });
+
+    // Initialize with body category
+    console.log('Initializing with body category...');
+    animationCategory.value = 'body';
+    animationCategory.dispatchEvent(new Event('change'));
+    console.log('Initialization complete. Animation type options:', animationType.options.length);
+
+    // Animation type change
+    animationType.addEventListener('change', () => {
+      const type = animationType.value;
+      const category = animationCategory.value;
+
+      // The Moon controls only apply to the moon-sky backgrounds. The two sliders now
+      // live under the Category and Animation Type dropdowns respectively.
+      const showMoon = BG_HAS_MOON[type] ? 'block' : 'none';
+      const moonPhaseGroup = document.getElementById('moon-phase-group');
+      const moonProgGroup  = document.getElementById('moon-prog-group');
+      if (moonPhaseGroup) moonPhaseGroup.style.display = showMoon;
+      if (moonProgGroup)  moonProgGroup.style.display  = showMoon;
+      // Backgrounds/foregrounds/terms have no playback speed -> hide the Speed slider.
+      const speedGroup = document.getElementById('speed-group');
+      if (speedGroup) speedGroup.style.display =
+        (category === 'background' || category === 'foreground' || category === 'term' ||
+         BACKGROUNDS[type] || FOREGROUNDS[type] || TERMS[type]) ? 'none' : 'block';
+
+      // Check if it's a background or foreground type
+      if (category === 'term' || TERMS[type]) {
+        subTypeGroup.style.display = 'none';
+        colorGroup.style.display = 'block';   // the term firework is coloured
+        color2Group.style.display = 'none';
+      } else if (category === 'background' || BACKGROUNDS[type]) {
+        subTypeGroup.style.display = 'none';
+        colorGroup.style.display = 'none';
+        color2Group.style.display = 'none';
+      } else if (category === 'foreground' || FOREGROUNDS[type]) {
+        subTypeGroup.style.display = 'none';
+        colorGroup.style.display = 'none';
+        color2Group.style.display = 'none';
+      } else if (type === 'pistil') {
+        subTypeGroup.style.display = 'none';
+        colorGroup.style.display = 'block';
+        color2Group.style.display = 'block';
+      } else if (category === 'shape') {
+        subTypeGroup.style.display = 'none';
+        colorGroup.style.display = 'block';
+        color2Group.style.display = 'none';
+      } else {
+        subTypeGroup.style.display = 'none';
+        colorGroup.style.display = 'block';
+        color2Group.style.display = 'none';
+      }
+      updatePickerPreview();
+    });
+
+    subType.addEventListener('change', updatePickerPreview);
+
+    // Color picker sync
+    colorPicker.addEventListener('input', () => {
+      colorHex.value = colorPicker.value.toUpperCase();
+      updatePickerPreview();
+    });
+
+    colorHex.addEventListener('input', () => {
+      const hex = colorHex.value.trim();
+      if (/^#[0-9A-F]{6}$/i.test(hex)) {
+        colorPicker.value = hex;
+        updatePickerPreview();
+      }
+    });
+
+    // Color 2 picker sync
+    color2Picker.addEventListener('input', () => {
+      color2Hex.value = color2Picker.value.toUpperCase();
+      updatePickerPreview();
+    });
+
+    color2Hex.addEventListener('input', () => {
+      const hex = color2Hex.value.trim();
+      if (/^#[0-9A-F]{6}$/i.test(hex)) {
+        color2Picker.value = hex;
+        updatePickerPreview();
+      }
+    });
+
+    speedSlider.addEventListener('input', () => {
+      speedValue.textContent = parseFloat(speedSlider.value).toFixed(1);
+      updatePickerPreview();
+    });
+
+    // Moon-sky controls (phase + arc position). Live-update the placed anim + the
+    // global preview so you can dial the moon in before accepting.
+    // Slider: middle = Full, either extreme = New. Right half waxes, left half wanes.
+    function phaseLabel(s) {
+      const illum = 1 - 2 * Math.abs(s - 0.5);
+      if (illum > 0.94) return 'Full';
+      if (illum < 0.06) return 'New';
+      const dir = s >= 0.5 ? 'Waxing' : 'Waning';
+      if (illum < 0.44) return dir + ' Crescent';
+      if (illum < 0.56) return s >= 0.5 ? 'First Quarter' : 'Last Quarter';
+      return dir + ' Gibbous';
+    }
+    function progLabel(p) {
+      if (p < 0.2) return 'East (rising)'; if (p < 0.4) return 'East';
+      if (p < 0.6) return 'Center (apex)'; if (p < 0.8) return 'West'; return 'West (setting)';
+    }
+    const moonPhaseSlider = document.getElementById('moon-phase-slider');
+    const moonProgSlider  = document.getElementById('moon-prog-slider');
+    // LIVE reflection: dragging either slider updates the labels AND the placed moon
+    // in the global preview immediately, via inst.setSky() — which re-bakes the moon
+    // texture + moves it + re-dims the stars on the EXISTING instance (no rebuild),
+    // so it's smooth, never haywire, and the sliders stay put (render never writes
+    // them back). The moon's shape/position changing does not touch the sliders.
+    function liveMoon() {
+      const ph = parseFloat(moonPhaseSlider.value), pr = parseFloat(moonProgSlider.value);
+      document.getElementById('moon-phase-value').textContent = phaseLabel(ph);
+      document.getElementById('moon-prog-value').textContent  = progLabel(pr);
+      if (placedAnimation && BG_HAS_MOON[placedAnimation.type]) {
+        placedAnimation.moonPhase = ph; placedAnimation.moonProg = pr;
+        const e = threeActive.get('placed');
+        if (e && e.inst && typeof e.inst.setSky === 'function') e.inst.setSky(ph, pr);
+      }
+    }
+    moonPhaseSlider.addEventListener('input', liveMoon);
+    moonProgSlider.addEventListener('input', liveMoon);
+
+
+    // Update picker preview
+    function updatePickerPreview() {
+      const type = animationType.value;
+      const category = animationCategory.value;
+
+      console.log('updatePickerPreview called - category:', category, 'type:', type);
+
+      // Foregrounds are dark "ground band" overlays — show them on a white
+      // backdrop in the picker so the dark shape is actually visible.
+      const pickerPreviewEl = document.getElementById('picker-preview');
+      if (pickerPreviewEl) {
+        pickerPreviewEl.style.background = category === 'foreground' ? '#fff' : '#000';
+      }
+
+      // Every effect is Three-native: preview it in the matching WebGL
+      // mini-player (same effect module + bloom as the global preview).
+      if (type) pickerShowThree(type, colorHex.value);
+
+      // Update the frame-count UI.
+      refreshFrameInfo();
+    }
+
+    previewReload.addEventListener('click', updatePickerPreview);
+
+    updatePickerPreview();
+
+    // Place animation in preview
+    placeBtn.addEventListener('click', () => {
+      const type = animationType.value;
+      const category = animationCategory.value;
+      let shapeStyle;
+
+      if (category === 'shape') {
+        shapeStyle = animationType.value;
+      }
+
+      placedAnimation = {
+        type,
+        category: category,
+        subType: null,
+        shape: shapeStyle || null,
+        // bg/fg have no colour; the TERM firework IS coloured.
+        color: (category === 'background' || category === 'foreground') ? null : colorHex.value,
+        color2: (type === 'pistil') ? color2Hex.value : null,
+        speed: parseFloat(speedSlider.value),
+        x: previewCanvas.width / 2,
+        y: previewCanvas.height / 2,
+        scale: 1,
+        rotation: 0,
+        startTime: currentTime,
+        freeze: FREEZE_POINTS[freezeIndex],
+        startFrame: startFrameForCurrent()
+      };
+      // term text (so the picker/preview spell the right word)
+      if (TERMS[type]) placedAnimation.term = TERMS[type].text;
+      // moon-sky controls
+      if (BG_HAS_MOON[type]) {
+        placedAnimation.moonPhase = parseFloat(document.getElementById('moon-phase-slider').value);
+        placedAnimation.moonProg  = parseFloat(document.getElementById('moon-prog-slider').value);
+        placedAnimation.moonVisible = true;
+      }
+
+      acceptBtn.disabled = false;
+      clearPlacedBtn.disabled = false;
+      drawPreview();
+    });
+
+    // Clear placed animation
+    clearPlacedBtn.addEventListener('click', () => {
+      placedAnimation = null;
+      acceptBtn.disabled = true;
+      clearPlacedBtn.disabled = true;
+      drawPreview();
+    });
+
+    // Accept animation to timeline
+    acceptBtn.addEventListener('click', () => {
+      if (!placedAnimation) return;
+
+      const type = placedAnimation.type;
+      const category = placedAnimation.category;
+      const animData = resolveAnimData(category, type);
+
+      // Deep Space is "a window into space" -> it rejects foregrounds (and vice
+      // versa). Block the combination instead of layering a ground over the void.
+      if (category === 'foreground' && timeline.some(a => a.type === 'space')) {
+        alert('The Deep Space background is a view into space — it can’t have a foreground.');
+        return;
+      }
+      if (type === 'space' && timeline.some(a => a.category === 'foreground')) {
+        alert('Deep Space can’t be used with a foreground — remove the foreground first.');
+        return;
+      }
+
+      // Background/foreground are full-canvas LAYERS: they span the entire show
+      // from t=0 and are exempt from the 15s burst limit. The TERM word-firework is
+      // a singleton too, but timed to the END (it plays its whole rise->burst and
+      // holds through the loop) and likewise exempt from the limit.
+      const isLayer = (category === 'background' || category === 'foreground');
+      const isTerm = (category === 'term');
+
+      // For Three shells, the chosen freeze frame is the START frame, so the
+      // timeline slot only spans the remaining frames (startFrame..end). Lock the
+      // start frame HERE (at Accept) from the freeze shown now — not at Place —
+      // so it always reflects the option visible when you click Accept.
+      let durationMs = animData.duration / placedAnimation.speed;
+      if (isLayer) {
+        placedAnimation.startFrame = 0;
+        durationMs = animData.duration;            // full show span
+      } else if (isTerm) {
+        placedAnimation.startFrame = 1;            // play the full sequence
+        durationMs = animData.duration;            // ~2.3s rise -> burst -> hold
+      } else if (isThreeNative(placedAnimation)) {
+        const kf = keyFramesFor(type);
+        if (kf) {
+          placedAnimation.startFrame = freezeFrame(type, placedAnimation.freeze);
+          const startF = placedAnimation.startFrame;
+          durationMs = ((kf.total - startF + 1) / kf.fps * 1000) / placedAnimation.speed;
+        }
+      }
+
+      // Layers start at 0; the term starts end-DURATION so its 2s of held text
+      // lands in the final 2s and holds through the loop; bursts use the playhead.
+      const startTime = isLayer ? 0 : isTerm ? Math.max(0, playbackEnd() - durationMs) : currentTime;
+      const endTime = startTime + durationMs;
+
+      if (!isLayer && !isTerm && endTime > 15000) {
+        alert('Animation exceeds 15 second limit!');
+        return;
+      }
+
+      // Background/foreground/term are singleton layers: adding one replaces any
+      // existing one of the same category, so they never stack/overlap.
+      if (isLayer || isTerm) {
+        timeline = timeline.filter(a => a.category !== category);
+      }
+
+      timeline.push({
+        ...placedAnimation,
+        startTime,
+        id: Date.now(),
+        duration: durationMs
+      });
+
+      timeline.sort((a, b) => a.startTime - b.startTime);
+
+      placedAnimation = null;
+      acceptBtn.disabled = true;
+      clearPlacedBtn.disabled = true;
+      updateTimeline();
+      drawPreview();
+    });
+
+    // Timeline rendering
+    function updateTimeline() {
+      timelineList.innerHTML = '';
+
+      if (timeline.length === 0) {
+        timelineList.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">No animations yet. Place one!</div>';
+        return;
+      }
+
+      timeline.forEach((anim, idx) => {
+        const animData = resolveAnimData(anim.category, anim.type);
+        let displayName;
+        if (anim.category === 'background') displayName = `🖼️ ${animData.name}`;
+        else if (anim.category === 'foreground') displayName = `🎭 ${animData.name}`;
+        else displayName = animData.name;
+
+        const div = document.createElement('div');
+        div.className = 'timeline-item';
+        div.title = 'Double-click to edit this entry';
+        div.style.borderLeftColor = anim.color || '#666';
+
+        div.innerHTML = `
+          <button class="delete-btn" data-idx="${idx}">✕</button>
+          <div class="timeline-item-time">${(anim.startTime / 1000).toFixed(2)}s - ${((anim.startTime + anim.duration) / 1000).toFixed(2)}s</div>
+          <div class="timeline-item-details">
+            ${displayName} | Speed: ${anim.speed.toFixed(1)}x${anim.color ? ` | Color: ${anim.color}` : ''}${anim.color2 ? ` | Color2: ${anim.color2}` : ''}<br>
+            Pos: (${Math.round(anim.x)}, ${Math.round(anim.y)}) | Scale: ${anim.scale.toFixed(2)} | Rot: ${Math.round(anim.rotation)}°
+          </div>
+        `;
+
+        // Double-click an entry to pull it back into the editor for changes.
+        div.addEventListener('dblclick', () => editTimelineEntry(idx));
+
+        timelineList.appendChild(div);
+      });
+
+      // Add delete handlers
+      document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const idx = parseInt(btn.dataset.idx);
+          if (confirm('Delete this animation?')) {
+            timeline.splice(idx, 1);
+            updateTimeline();
+            drawPreview();
+          }
+        });
+      });
+    }
+
+    updateTimeline();
+
+    // Pull a timeline entry back into the editor as the "placed" animation with
+    // every attribute restored (category, type, colors, speed, position, scale,
+    // rotation, start time, freeze point) so the user can fix a mistake without
+    // re-entering all the options. The entry is removed from the timeline; the
+    // user re-Accepts it (keeping its original start time) when done.
+    function editTimelineEntry(idx) {
+      const anim = timeline[idx];
+      if (!anim) return;
+
+      // Pause playback so the editor/handles are interactive.
+      if (isPlaying) { pauseBtn.click(); }
+
+      // Remove it so editing + re-Accept doesn't create a duplicate.
+      timeline.splice(idx, 1);
+
+      // Move the playhead to this entry's start so re-Accept (which now stamps
+      // startTime at the current playhead) preserves its timeline position.
+      currentTime = anim.startTime;
+      if (typeof updateTimeDisplay === 'function') updateTimeDisplay();
+
+      // Restore the dropdowns: category rebuilds the type list, then the type
+      // sets color/speed visibility and the picker preview.
+      animationCategory.value = anim.category;
+      animationCategory.dispatchEvent(new Event('change'));
+      animationType.value = anim.type;
+      animationType.dispatchEvent(new Event('change'));
+
+      // Restore colors + speed controls.
+      if (anim.color) {
+        colorHex.value = anim.color.toUpperCase();
+        if (/^#[0-9A-F]{6}$/i.test(anim.color)) colorPicker.value = anim.color;
+      }
+      if (anim.color2) {
+        color2Hex.value = anim.color2.toUpperCase();
+        if (/^#[0-9A-F]{6}$/i.test(anim.color2)) color2Picker.value = anim.color2;
+      }
+      speedSlider.value = anim.speed;
+      speedValue.textContent = parseFloat(anim.speed).toFixed(1);
+      updatePickerPreview();
+
+      // Re-place it in the preview with all positional attributes intact.
+      placedAnimation = {
+        type: anim.type,
+        category: anim.category,
+        subType: anim.subType || null,
+        shape: anim.shape || null,
+        color: anim.color || null,
+        color2: anim.color2 || null,
+        speed: anim.speed,
+        x: anim.x,
+        y: anim.y,
+        scale: anim.scale,
+        rotation: anim.rotation,
+        startTime: anim.startTime,
+        freeze: anim.freeze || FREEZE_POINTS[freezeIndex],
+        startFrame: anim.startFrame || 0,
+        // preserve sky/term params so re-Accept keeps the moon / facing / word
+        term: anim.term, moonPhase: anim.moonPhase, moonProg: anim.moonProg,
+        moonVisible: anim.moonVisible, facing: anim.facing, seed: anim.seed
+      };
+      // restore the moon sliders/labels if this is a moon sky
+      if (BG_HAS_MOON[anim.type]) {
+        const mp = document.getElementById('moon-phase-slider'), mg = document.getElementById('moon-prog-slider');
+        if (anim.moonPhase != null) mp.value = anim.moonPhase;
+        if (anim.moonProg  != null) mg.value = anim.moonProg;
+      }
+      const fi = FREEZE_POINTS.indexOf(placedAnimation.freeze);
+      if (fi >= 0) freezeIndex = fi;
+
+      acceptBtn.disabled = false;
+      clearPlacedBtn.disabled = false;
+
+      updateTimeline();
+      drawPreview();
+    }
+
+    // Preview canvas interaction
+    previewCanvas.addEventListener('mousedown', (e) => {
+      if (!placedAnimation) return;
+
+      const rect = previewCanvas.getBoundingClientRect();
+      const x = (e.clientX - rect.left) * (previewCanvas.width / rect.width);
+      const y = (e.clientY - rect.top) * (previewCanvas.height / rect.height);
+
+      if (e.button === 0) { // Left click - drag
+        isDragging = true;
+        dragStart = { x: x - placedAnimation.x, y: y - placedAnimation.y };
+      } else if (e.button === 2) { // Right click - rotate (in-plane, clock-style; not bg/fg)
+        if (placedAnimation.category !== 'background' && placedAnimation.category !== 'foreground') {
+          isRotating = true;
+          dragStart = { x, y };
+        }
+      }
+
+      e.preventDefault();
+    });
+
+    previewCanvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    // Move/up are on WINDOW (not the canvas) so a drag keeps tracking when the
+    // pointer goes off-canvas (you can place a start/end point off-screen) and
+    // ALWAYS releases on mouse-up no matter where the pointer is.
+    window.addEventListener('mousemove', (e) => {
+      if (!placedAnimation) return;
+      if (!isDragging && !isRotating && !isScaling) return;
+
+      const rect = previewCanvas.getBoundingClientRect();
+      const x = (e.clientX - rect.left) * (previewCanvas.width / rect.width);
+      const y = (e.clientY - rect.top) * (previewCanvas.height / rect.height);
+
+      if (isDragging) {
+        placedAnimation.x = x - dragStart.x;
+        placedAnimation.y = y - dragStart.y;
+        drawPreview();
+      } else if (isRotating) {
+        const dx = x - placedAnimation.x;
+        const dy = y - placedAnimation.y;
+        placedAnimation.rotation = Math.atan2(dy, dx) * (180 / Math.PI) + 90;
+        drawPreview();
+      } else if (isScaling) {
+        const distance = Math.sqrt(Math.pow(x - placedAnimation.x, 2) + Math.pow(y - placedAnimation.y, 2));
+        placedAnimation.scale = Math.max(0.1, Math.min(3, distance / 100));
+        drawPreview();
+      }
+    });
+
+    window.addEventListener('mouseup', () => {
+      isDragging = false;
+      isRotating = false;
+      isScaling = false;
+    });
+
+    document.addEventListener('keydown', (e) => {
+      const tag = (e.target && e.target.tagName || '').toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+
+      if (e.code === 'Space' || e.key === ' ') {
+        e.preventDefault();
+        cycleFreeze();
+        return;
+      }
+
+      if (e.key === 's' || e.key === 'S') {
+        if (!isScaling && placedAnimation) {
+          isScaling = true;
+        }
+      }
+    });
+
+    document.addEventListener('keyup', (e) => {
+      if (e.key === 's' || e.key === 'S') {
+        isScaling = false;
+      }
+    });
+
+    // Viewing-layer order: background (back) -> fireworks -> foreground (front).
+    // The foreground is the topmost layer and HIDES whatever is behind it.
+    function layerRank(category) {
+      if (category === 'background') return 0;
+      if (category === 'foreground') return 2;
+      if (category === 'term') return 3; // word-firework, frontmost
+      return 1; // body / tail / shape fireworks
+    }
+
+    // Draw the global preview. Fireworks, backgrounds and foregrounds all render
+    // in the Three overlay (syncThreeTimeline); here we only paint the black
+    // backdrop and the 2D editing handles for the animation being positioned.
+    function drawPreview() {
+      previewCtx.globalAlpha = 1;
+      previewCtx.fillStyle = '#000';
+      previewCtx.fillRect(0, 0, previewCanvas.width, previewCanvas.height);
+
+      if (isPlaying) return;   // during playback the Three overlay shows true motion
+
+      // Editing handles for the placed animation.
+      if (placedAnimation) {
+        previewCtx.globalAlpha = 1;
+
+        // Draw center point
+        previewCtx.fillStyle = '#fff';
+        previewCtx.strokeStyle = '#000';
+        previewCtx.lineWidth = 2;
+        previewCtx.beginPath();
+        previewCtx.arc(placedAnimation.x, placedAnimation.y, 6, 0, Math.PI * 2);
+        previewCtx.stroke();
+        previewCtx.fill();
+
+        // Draw bounding box
+        previewCtx.strokeStyle = '#2196F3';
+        previewCtx.lineWidth = 2;
+        previewCtx.setLineDash([5, 5]);
+        const size = 100 * placedAnimation.scale;
+        previewCtx.strokeRect(placedAnimation.x - size/2, placedAnimation.y - size/2, size, size);
+        previewCtx.setLineDash([]);
+      }
+    }
+
+    // ===== Spacebar freeze-point cycling + toast =====
+    function startFrameForCurrent() {
+      const fk = FREEZE_POINTS[freezeIndex];
+      // Real computed key frame (frame 1 / peak / end-3) from the effect module.
+      return freezeFrame(animationType.value, fk);
+    }
+
+    function cycleFreeze() {
+      freezeIndex = (freezeIndex + 1) % FREEZE_POINTS.length;
+      const fk = FREEZE_POINTS[freezeIndex];
+      if (placedAnimation) {
+        placedAnimation.freeze = fk;
+        // Store the computed key frame (real frame number) for this shell.
+        placedAnimation.startFrame = freezeFrame(placedAnimation.type, fk);
+      }
+      drawPreview();
+      showFrameToast();
+    }
+
+    function showFrameToast() {
+      const fk = FREEZE_POINTS[freezeIndex];
+      let frameNum = '—', total = '—';
+      // Real, computed frame numbers (frame 1 / peak / end-3) from the module.
+      const tType = placedAnimation ? placedAnimation.type : animationType.value;
+      const kf = tType ? keyFramesFor(tType) : null;
+      if (kf) { total = kf.total; frameNum = freezeFrame(tType, fk); }
+      frameToast.innerHTML = `<span class="toast-label">${FREEZE_LABELS[fk]}</span> · frame ${frameNum} / ${total}`;
+
+      // Position the toast just below the current animation in the preview.
+      const dispScale = previewCanvas.clientWidth / previewCanvas.width;
+      const cx = placedAnimation ? placedAnimation.x : previewCanvas.width / 2;
+      const cy = placedAnimation ? placedAnimation.y : previewCanvas.height / 2;
+      const left = cx * dispScale;
+      const top = Math.min(cy * dispScale + 70, previewCanvas.clientHeight - 28);
+      frameToast.style.left = left + 'px';
+      frameToast.style.top = Math.max(8, top) + 'px';
+      frameToast.classList.add('show');
+      clearTimeout(frameToast._timer);
+      frameToast._timer = setTimeout(() => frameToast.classList.remove('show'), 1500);
+    }
+
+    // Playback controls
+    let animationFrameId = null;
+    let scrubInterval = null;
+
+    playBtn.addEventListener('click', () => {
+      isPlaying = true;
+      playBtn.classList.add('active');
+      pauseBtn.classList.remove('active');
+      animate();
+    });
+
+    pauseBtn.addEventListener('click', () => {
+      isPlaying = false;
+      playBtn.classList.remove('active');
+      pauseBtn.classList.add('active');
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      drawPreview(); // redraw editing handles at the paused playhead
+    });
+
+    // Hold to scrub backward
+    stepBack.addEventListener('mousedown', () => {
+      currentTime = Math.max(0, currentTime - 16.67);
+      updateTimeDisplay();
+      drawPreview();
+
+      scrubInterval = setInterval(() => {
+        currentTime = Math.max(0, currentTime - 16.67);
+        updateTimeDisplay();
+        drawPreview();
+      }, 16.67);
+    });
+
+    stepBack.addEventListener('mouseup', () => {
+      if (scrubInterval) {
+        clearInterval(scrubInterval);
+        scrubInterval = null;
+      }
+    });
+
+    stepBack.addEventListener('mouseleave', () => {
+      if (scrubInterval) {
+        clearInterval(scrubInterval);
+        scrubInterval = null;
+      }
+    });
+
+    // Hold to scrub forward
+    stepForward.addEventListener('mousedown', () => {
+      currentTime = Math.min(15000, currentTime + 16.67);
+      updateTimeDisplay();
+      drawPreview();
+
+      scrubInterval = setInterval(() => {
+        currentTime = Math.min(15000, currentTime + 16.67);
+        updateTimeDisplay();
+        drawPreview();
+      }, 16.67);
+    });
+
+    stepForward.addEventListener('mouseup', () => {
+      if (scrubInterval) {
+        clearInterval(scrubInterval);
+        scrubInterval = null;
+      }
+    });
+
+    stepForward.addEventListener('mouseleave', () => {
+      if (scrubInterval) {
+        clearInterval(scrubInterval);
+        scrubInterval = null;
+      }
+    });
+
+    resetBtn.addEventListener('click', () => {
+      currentTime = 0;
+      isPlaying = false;
+      playBtn.classList.remove('active');
+      pauseBtn.classList.add('active');
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      updateTimeDisplay();
+      drawPreview();
+    });
+
+    timelineSlider.addEventListener('input', () => {
+      currentTime = parseFloat(timelineSlider.value);
+      updateTimeDisplay();
+      drawPreview();
+    });
+
+    // Where playback loops back to 0: 0.5s after the LAST firework (body/tail/
+    // shape) finishes, so the show doesn't sit through empty seconds. Background
+    // and foreground layers don't count (they span the whole 15s). Capped at the
+    // 15s limit; falls back to 15s if no fireworks are placed.
+    function playbackEnd() {
+      let last = 0;
+      timeline.forEach(anim => {
+        // bg/fg span the whole show; the term banner is timed to the END and must
+        // NOT push the end out (it's excluded so it can hold through the loop).
+        if (anim.category === 'background' || anim.category === 'foreground' || anim.category === 'term') return;
+        last = Math.max(last, anim.startTime + anim.duration);
+      });
+      if (last <= 0) return 15000;
+      return Math.min(last + 500, 15000);
+    }
+
+    function animate() {
+      if (!isPlaying) return;
+
+      currentTime += 16.67;
+      if (currentTime > playbackEnd()) {
+        currentTime = 0;
+      }
+
+      updateTimeDisplay();
+      drawPreview();
+
+      animationFrameId = requestAnimationFrame(animate);
+    }
+
+    function updateTimeDisplay() {
+      timelineSlider.value = currentTime;
+      timeDisplay.textContent = `${(currentTime / 1000).toFixed(2)}s / 15.00s`;
+    }
+
+    // Project management
+    newBtn.addEventListener('click', () => {
+      if (timeline.length > 0 && !confirm('Start new project? Current timeline will be lost.')) {
+        return;
+      }
+      timeline = [defaultBackgroundAnim()];
+      placedAnimation = null;
+      currentTime = 0;
+      projectName = 'Untitled Fireworks';
+      updateTimeline();
+      drawPreview();
+      updateTimeDisplay();
+    });
+
+    saveBtn.addEventListener('click', () => window.openWalletFlow('save'));
+
+    importBtn.addEventListener('click', () => window.openWalletFlow('import'));
+
+    // ---- ⚡ Block Builder: generate a Bitcoin-block show & auto-play (watch-only) ----
+    (function setupBlockBuilder() {
+      const elHeight = document.getElementById('bb-height');
+      const elGo = document.getElementById('bb-go');
+      const elPrev = document.getElementById('bb-prev');
+      const elNext = document.getElementById('bb-next');
+      const elRandom = document.getElementById('bb-random');
+      const elStatus = document.getElementById('bb-status');
+      const elCurated = document.getElementById('bb-curated');
+      if (!elGo) return;
+
+      const blocksByHeight = new Map();
+      let orderAll = [];       // heights by score (full ranking)
+      let orderCurated = [];   // heights of the curated 250 (by curated rank)
+      const meta = new Map();  // height -> { year, score, rank }
+      let ptr = 0, ready = false;
+
+      const activeOrder = () => (elCurated.checked && orderCurated.length ? orderCurated : orderAll);
+
+      (async function load() {
+        try {
+          const [bd, rk] = await Promise.all([
+            fetch('block-shows/data/blocks_july4.json').then(r => r.json()),
+            fetch('block-shows/out/ranking.json').then(r => r.json()),
+          ]);
+          for (const b of bd.blocks) blocksByHeight.set(b.height, b);
+          orderAll = rk.ranking.map(r => r.height);
+          for (const r of rk.ranking) meta.set(r.height, { year: r.year, score: r.score, rank: r.rank });
+          orderCurated = (rk.curated || []).map(c => c.height);
+          ready = true;
+          elStatus.textContent = `${bd.blocks.length} blocks · ${orderCurated.length} curated — ▶ to start`;
+        } catch (e) {
+          elStatus.textContent = 'serve over http:// to load block data';
+        }
+      })();
+
+      function generateAndPlay(block) {
+        if (!window.BlockShow) { elStatus.textContent = 'engine not loaded'; return; }
+        const show = window.BlockShow.generateShow(block);
+        timeline.length = 0;
+        show.timeline.forEach(a => timeline.push(a));
+        placedAnimation = null;
+        projectName = show.name;
+        acceptBtn.disabled = true;
+        clearPlacedBtn.disabled = true;
+        updateTimeline();
+        // restart playback cleanly from 0 so you just watch
+        pauseBtn.click();
+        currentTime = 0;
+        updateTimeDisplay();
+        drawPreview();
+        playBtn.click();
+        const m = meta.get(block.height) || {};
+        elStatus.textContent = `#${block.height} · ${m.year || '?'} · rank ${m.rank || '?'} · ${(m.score || 0).toFixed(3)}`;
+      }
+
+      function goHeight(h) {
+        const b = blocksByHeight.get(h);
+        if (!b) { elStatus.textContent = `#${h} is not a July-4 block`; return; }
+        const i = activeOrder().indexOf(h);
+        if (i >= 0) ptr = i;
+        elHeight.value = h;
+        generateAndPlay(b);
+      }
+      function step(d) {
+        if (!ready) return;
+        const ord = activeOrder();
+        if (!ord.length) return;
+        ptr = (ptr + d + ord.length) % ord.length;
+        goHeight(ord[ptr]);
+      }
+
+      elGo.addEventListener('click', () => { const h = parseInt(elHeight.value, 10); if (h) goHeight(h); });
+      elHeight.addEventListener('keydown', e => { if (e.key === 'Enter') { const h = parseInt(elHeight.value, 10); if (h) goHeight(h); } });
+      elPrev.addEventListener('click', () => step(-1));
+      elNext.addEventListener('click', () => step(1));
+      elRandom.addEventListener('click', () => { if (!ready) return; const ord = activeOrder(); ptr = Math.floor(Math.random() * ord.length); goHeight(ord[ptr]); });
+      elCurated.addEventListener('change', () => { ptr = 0; });
+    })();
+
+    // Export inscription
+    exportBtn.addEventListener('click', () => {
+      if (timeline.length === 0) {
+        alert('Add some animations first!');
+        return;
+      }
+
+      window.openWalletFlow('export');
+    });
+
+    function generateInscription() {
+      // Each animation, normalized for the standalone Three runtime below.
+      const animations = timeline.map(anim => ({
+        type: anim.type,
+        category: anim.category,
+        shape: anim.shape || null,
+        color: anim.color || null,
+        color2: anim.color2 || null,
+        speed: anim.speed || 1,
+        x: anim.x / previewCanvas.width,    // 0..1 across the field
+        y: anim.y / previewCanvas.height,   // 0..1 down the field
+        scale: anim.scale || 1,
+        rotation: anim.rotation || 0,
+        startTime: anim.startTime || 0,
+        duration: anim.duration || 2000,
+        startFrame: anim.startFrame || 0,
+        // background tone/moon/facing + term text, derived here so the exported
+        // runtime can pass them straight into create() (JSON-safe, no maps needed).
+        ...effectExtras(anim)
+      }));
+
+      // type -> { local, id }. The exported runtime resolves each to its on-chain
+      // URL when ONCHAIN is true and an id is filled in, otherwise the local
+      // ./effects path — so any mix of inscribed + local effects works.
+      const effectMap = {};
+      [...new Set(animations.map(a => a.type))].forEach(t => {
+        if (!THREE_EFFECTS[t]) return;
+        const local = THREE_EFFECTS[t].module;
+        effectMap[t] = { local, id: INSCRIPTION_IDS[moduleBasename(local)] || '' };
+      });
+
+      // three.js + bloom must be resolved by the static import map (the effect
+      // modules import the bare specifier 'three'), so bake their URLs at export
+      // time: on-chain when an id exists, else local.
+      const threeId = INSCRIPTION_IDS['three'];
+      const bloomId = INSCRIPTION_IDS['three-postprocessing-bundle.js'];
+      const threeURL = threeId ? CONTENT_BASE + threeId : './lib/three.module.js';
+      const bloomURL = bloomId ? CONTENT_BASE + bloomId : './lib/three-postprocessing-bundle.js';
+
+      // Loop point: end 0.5s after the LAST firework (body/tail/shape) finishes
+      // — background/foreground layers span the whole show and don't count —
+      // capped at the 15s limit, or a full 15s if no fireworks were placed.
+      // Mirrors the builder's playbackEnd() so the export loops like the preview.
+      let lastBurst = 0;
+      animations.forEach(a => {
+        if (a.category === 'background' || a.category === 'foreground' || a.category === 'term') return;
+        lastBurst = Math.max(lastBurst, a.startTime + a.duration);
+      });
+      const showEnd = lastBurst <= 0 ? 15000 : Math.min(lastBurst + 500, 15000);
+
+      return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>${projectName}</title>
+  <style>
+    html,body{margin:0;padding:0;background:#000;overflow:hidden;}
+    #stage{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);}
+    canvas{display:block;}
+  </style>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "${threeURL}",
+      "three-bloom": "${bloomURL}"
+    }
+  }
+  <\/script>
+  <!-- Local-only libs (for fully offline testing) — swap with the import map above:
+  { "imports": { "three": "./lib/three.module.js", "three-bloom": "./lib/three-postprocessing-bundle.js" } } -->
+</head>
+<body>
+  <div id="stage"></div>
+  <script type="module">
+    import * as THREE from 'three';
+    import { EffectComposer, RenderPass, ShaderPass, UnrealBloomPass, FullScreenQuad } from 'three-bloom';
+
+    const TIMELINE = ${JSON.stringify(animations)};
+    const EFFECTS  = ${JSON.stringify(effectMap)};   // type -> { local, id }
+    const SHOW_END = ${showEnd};                      // ms; the show loops at this point
+
+    // ONCHAIN governs the EFFECT modules below: true = use the on-chain copy of
+    // any effect that has an id (the rest stay local); false = force all local.
+    // three.js + bloom are fixed by the import map above (re-export to change).
+    const ONCHAIN = true;
+    const CONTENT = '${CONTENT_BASE}';   // for the final recursive inscription use '/content/'
+    const effURL = e => (ONCHAIN && e.id) ? CONTENT + e.id : e.local;
+
+    // View mapping — identical to the builder's worldFromCanvas().
+    const VIEW_SPAN = 42.9, VIEW_CENTER_Y = 12;
+    function world(nx, ny) {
+      return { x: (nx - 0.5) * VIEW_SPAN, y: VIEW_CENTER_Y + (0.5 - ny) * VIEW_SPAN };
+    }
+
+    // Renderer / scene / bloom — identical settings to the builder preview.
+    const stage = document.getElementById('stage');
+    const SIZE = () => Math.max(2, Math.min(window.innerWidth, window.innerHeight));
+    // Layer-isolated render (mirrors the builder preview): backgrounds and
+    // foregrounds live in their own scenes so the fireworks' bloom + tone map
+    // never touch them. bg/fg effect modules are unchanged.
+    const scene = new THREE.Scene();     // FIREWORKS only
+    const bgScene = new THREE.Scene();   // backgrounds (own bloom, drawn first)
+    const fgScene = new THREE.Scene();   // foregrounds (alpha, drawn last/on top)
+    const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 400);
+    camera.position.set(0, 11, 46); camera.lookAt(0, 12, 0);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setClearColor(0x000000, 1);
+    // RESOLUTION-INDEPENDENT RENDERING. The whole frame is rendered at a FIXED
+    // internal buffer (RENDER_RES) and the canvas is then CSS-stretched to fill the
+    // display. This is the ONLY way a 65" fullscreen looks IDENTICAL to the 576
+    // preview instead of turning the soft point sprites into giant blobs: every
+    // spark rasterises at the SAME pixel size everywhere, so a huge screen just
+    // shows the crisp 576 image scaled up by the GPU. 1152 = 576 × 2 (supersample
+    // baked in → pixelRatio forced to 1). Raise for more detail on huge screens,
+    // lower for a crisper/dottier look. Keep IN SYNC with the builder preview.
+    const RENDER_RES = 1152;
+    renderer.setPixelRatio(1);
+    stage.appendChild(renderer.domElement);
+    // EffectComposer renders to an offscreen target that bypasses the renderer's
+    // own MSAA — without this the bloom output is un-antialiased and reads as
+    // blurry when scaled up to fullscreen. samples:4 restores antialiasing;
+    // HalfFloatType gives the pipeline >8-bit precision so dark gradients (e.g.
+    // the navy background) don't band as they pass through the bloom passes.
+
+    // BACKGROUND composer — own bloom (params match the builder), renders first.
+    const bgRT = new THREE.WebGLRenderTarget(1, 1, { samples: 4, type: THREE.HalfFloatType });
+    const bgComposer = new EffectComposer(renderer, bgRT);
+    bgComposer.addPass(new RenderPass(bgScene, camera));
+    bgComposer.addPass(new UnrealBloomPass(new THREE.Vector2(1, 1), 1.0, 0.3, 0.4));
+
+    // FIREWORKS composer — own bloom (turned WAY down) + the fireworks-only tone
+    // map with a hard luminance CEILING. Renders OFFSCREEN, then blitted additively
+    // over the background. The bloom resolution is pinned to FW_BLOOM_RES so the
+    // export glows the SAME as the small picker (UnrealBloom is otherwise res-
+    // dependent → brighter/fuzzier the bigger the frame). uKnee/uMax cap total
+    // stacked brightness. Keep ALL of this IN SYNC with the builder preview.
+    const FW_BLOOM_RES = 384;
+    const composerRT = new THREE.WebGLRenderTarget(1, 1, { samples: 4, type: THREE.HalfFloatType });
+    const composer = new EffectComposer(renderer, composerRT);
+    composer.renderToScreen = false;
+    composer.addPass(new RenderPass(scene, camera));
+    // Soft-knee tone map, reused TWICE (keep IN SYNC with the builder preview):
+    //   PRE-bloom  (high ceiling 1.25) — tames extreme additive overlays (scaled
+    //              willow / big brocade / stacked tails / dense Term) BEFORE the
+    //              bloom so it can't spread runaway brightness into a wide haze.
+    //   POST-bloom (ceiling 0.60)      — the final fireworks brightness cap.
+    const FW_TONEMAP = {
+      uniforms: { tDiffuse: { value: null }, uKnee: { value: 0.30 }, uMax: { value: 0.60 } },
+      vertexShader:
+        'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
+      fragmentShader: [
+        'uniform sampler2D tDiffuse; uniform float uKnee; uniform float uMax; varying vec2 vUv;',
+        'void main(){',
+        '  vec4 t = texture2D(tDiffuse, vUv);',
+        '  vec3 c = t.rgb;',
+        '  float L = dot(c, vec3(0.2126, 0.7152, 0.0722));',
+        '  if (L > uKnee) {',
+        '    float span = max(uMax - uKnee, 1e-3);',
+        '    float Ln = uKnee + span * (1.0 - exp(-(L - uKnee) / span));',
+        '    c *= Ln / max(L, 1e-4);',
+        '  }',
+        '  gl_FragColor = vec4(c, t.a);',
+        '}'
+      ].join('\\n')
+    };
+    const preClamp = new ShaderPass(FW_TONEMAP);   // ShaderPass clones uniforms
+    preClamp.uniforms.uKnee.value = 0.80; preClamp.uniforms.uMax.value = 1.25;
+    composer.addPass(preClamp);
+    const bloomPass = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.25, 0.3, 0.70);
+    composer.addPass(bloomPass);
+    composer.addPass(new ShaderPass(FW_TONEMAP));
+
+    // Additive blit of the fireworks layer over the background (pure One,One add).
+    const fwBlitQuad = new FullScreenQuad(new THREE.ShaderMaterial({
+      uniforms: { tDiffuse: { value: null } },
+      vertexShader:
+        'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
+      fragmentShader:
+        'uniform sampler2D tDiffuse; varying vec2 vUv; void main(){ gl_FragColor = vec4(texture2D(tDiffuse, vUv).rgb, 1.0); }',
+      depthTest: false, depthWrite: false, transparent: true,
+      blending: THREE.CustomBlending,
+      blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor,
+      blendEquationAlpha: THREE.AddEquation, blendSrcAlpha: THREE.ZeroFactor, blendDstAlpha: THREE.OneFactor
+    }));
+    // Pin the FIREWORKS bloom to FW_BLOOM_RES (after composer.setSize) so the glow
+    // matches the picker/preview at any export resolution instead of scaling up.
+    function resize() {
+      const s = SIZE();
+      // Fixed internal buffer; CSS size = the on-screen square (false = don't let
+      // setSize overwrite the CSS). The GPU upscales RENDER_RES → s for any display,
+      // so a 65" screen shows the exact 576 image scaled, not magnified blobs.
+      renderer.setSize(RENDER_RES, RENDER_RES, false);
+      renderer.domElement.style.width = s + 'px';
+      renderer.domElement.style.height = s + 'px';
+      composer.setSize(RENDER_RES, RENDER_RES); bgComposer.setSize(RENDER_RES, RENDER_RES);
+      bloomPass.setSize(FW_BLOOM_RES, FW_BLOOM_RES);
+    }
+    window.addEventListener('resize', resize); resize();
+
+    // Load every needed effect module up front (on-chain or local per effURL).
+    const mods = {};
+    await Promise.all(Object.entries(EFFECTS).map(async ([t, e]) => {
+      const url = effURL(e);
+      try { mods[t] = await import(url); }
+      catch (err) { console.error('effect module failed to load:', t, url, err); }
+    }));
+
+    // Active instances, keyed by timeline index — mirrors ensureThreeAnim().
+    const active = new Map();
+    function disposeEntry(e) {
+      if (e.pivot.parent) e.pivot.parent.remove(e.pivot); else scene.remove(e.pivot);
+      try { e.inst.dispose(); } catch (_) {}
+    }
+    // bg -> bgScene, fg -> fgScene, everything else -> the fireworks scene.
+    const sceneFor = (anim) => anim.category === 'background' ? bgScene
+      : anim.category === 'foreground' ? fgScene : scene;
+
+    function ensure(anim, key, t) {
+      const mod = mods[anim.type];
+      if (!mod || typeof mod.create !== 'function') return;
+      const isLayer = anim.category === 'background' || anim.category === 'foreground' || anim.category === 'term';
+      const fps = mod.FPS || 60;
+      const total = mod.FRAMES || Math.round((mod.DURATION || 2000) / 1000 * fps);
+      const startF = anim.startFrame > 0 ? anim.startFrame : 1;
+      const elapsed = (t - anim.startTime) / 1000;
+      let frame = startF + Math.round(elapsed * fps * (anim.speed || 1));
+      let on;
+      if (isLayer) {
+        // Static full-show layers stay on for their whole window (clamp frame).
+        on = elapsed >= 0 && (t - anim.startTime) <= anim.duration;
+        frame = Math.max(1, Math.min(total, frame));
+      } else {
+        on = elapsed >= 0 && frame >= 1 && frame <= total;
+      }
+      let e = active.get(key);
+      if (!on) { if (e) { disposeEntry(e); active.delete(key); } return; }
+      if (!e) {
+        const w = world(anim.x, anim.y);
+        const inst = mod.create({ color: anim.color, x: w.x, y: w.y, z: 0, scale: anim.scale, shape: anim.shape,
+          tone: anim.tone, moon: anim.moon, facing: anim.facing, seed: anim.seed, term: anim.term });
+        inst.object.frustumCulled = false;
+        inst.object.traverse(o => { o.frustumCulled = false; });
+        const pivot = new THREE.Group();
+        pivot.position.set(w.x, w.y, 0);
+        inst.object.position.set(-w.x, -w.y, 0);
+        pivot.rotation.z = -(anim.rotation || 0) * Math.PI / 180;
+        pivot.add(inst.object);
+        sceneFor(anim).add(pivot);   // route to bg / fireworks / fg layer
+        e = { inst, pivot }; active.set(key, e);
+      }
+      e.inst.setFrame(frame);
+    }
+
+    const t0 = performance.now();
+    // Composite the layers: background (own bloom) -> fireworks (own bloom + tone
+    // map, added on top) -> foreground (alpha, occludes). IN SYNC with the builder.
+    function renderLayers() {
+      renderer.autoClear = true;
+      bgComposer.render();                                   // background -> screen
+      composer.render();                                    // fireworks -> offscreen RT
+      renderer.setRenderTarget(null);
+      renderer.autoClear = false;
+      fwBlitQuad.material.uniforms.tDiffuse.value = composer.readBuffer.texture;
+      fwBlitQuad.render(renderer);                          // ADD fireworks over bg
+      renderer.render(fgScene, camera);                    // foreground on top (occludes)
+      renderer.autoClear = true;
+    }
+    function loop() {
+      requestAnimationFrame(loop);
+      let t = performance.now() - t0;
+      if (SHOW_END > 0) t = t % SHOW_END;   // loop the whole show
+      TIMELINE.forEach((anim, i) => ensure(anim, i, t));
+      renderLayers();
+    }
+    loop();
+  <\/script>
+</body>
+</html>
+
+<!--
+  BEFORE INSCRIBING:
+  1. Inscribe lib/three.module.js, lib/three-postprocessing-bundle.js and each
+     effects/*.js module used by this show.
+  2. Replace the two import-map URLs and every value in the EFFECTS map above with
+     their /content/<id> inscription URLs.
+  3. Test over http:// (ES modules don't load from file://).
+-->`;
+    }
+
+    // Every project starts with an All Black background already in the
+    // timeline, so the composition (and export) has a solid black backdrop
+    // by default without the user adding one.
+    function defaultBackgroundAnim() {
+      const bg = BACKGROUNDS.allblack;
+      return {
+        type: 'allblack',
+        category: 'background',
+        subType: null,
+        shape: null,
+        color: null,
+        color2: null,
+        speed: 1,
+        x: previewCanvas.width / 2,
+        y: previewCanvas.height / 2,
+        scale: 1,
+        rotation: 0,
+        startTime: 0,
+        freeze: 'first',
+        startFrame: 0,
+        id: Date.now(),
+        duration: bg.duration
+      };
+    }
+
+    // Seed the starting project with the default background.
+    if (timeline.length === 0) {
+      timeline.push(defaultBackgroundAnim());
+      updateTimeline();
+    }
+
+    // Initial draw
+    drawPreview();
+
+    // Animation loop for strobe effect
+    setInterval(() => {
+      if (timeline.some(a => a.type === 'strobe') || (placedAnimation && placedAnimation.type === 'strobe')) {
+        drawPreview();
+      }
+    }, 100);
+
+    // ============================================================
+    //  Wallet-gated cloud save / import / export  (Supabase)
+    //  Replaces local file download/upload. Everything is keyed by a
+    //  bc1p (Taproot) address. Backend + security model: supabase_setup.sql.
+    // ============================================================
+    (function setupCloud() {
+      const SUPABASE_URL = 'https://bnhtllxheyacjpyazgtc.supabase.co';
+      const SUPABASE_KEY = 'sb_publishable_W7vAeTSsnwtcz7jNzbc2lw_YZ9TVTxv';
+      let sbClient = null;
+      try { sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); }
+      catch (e) { console.error('Supabase client failed to init', e); }
+
+      async function rpc(fn, args) {
+        if (!sbClient) throw new Error('cloud unavailable (Supabase library did not load)');
+        const { data, error } = await sbClient.rpc(fn, args);
+        if (error) throw new Error(error.message || 'request failed');
+        return data;
+      }
+
+      // ---- bech32m Taproot validation (bc1p…, witness v1, 32-byte program) ----
+      const B32_CHARSET = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
+      const BECH32M_CONST = 0x2bc830a3;
+      function b32Polymod(values) {
+        const GEN = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3];
+        let chk = 1;
+        for (const v of values) {
+          const b = chk >> 25;
+          chk = ((chk & 0x1ffffff) << 5) ^ v;
+          for (let i = 0; i < 5; i++) if ((b >> i) & 1) chk ^= GEN[i];
+        }
+        return chk;
+      }
+      function b32HrpExpand(hrp) {
+        const ret = [];
+        for (let i = 0; i < hrp.length; i++) ret.push(hrp.charCodeAt(i) >> 5);
+        ret.push(0);
+        for (let i = 0; i < hrp.length; i++) ret.push(hrp.charCodeAt(i) & 31);
+        return ret;
+      }
+      function b32Decode(addr) {
+        if (addr.length < 8 || addr.length > 90) return null;
+        let lower = false, upper = false;
+        for (const c of addr) {
+          const o = c.charCodeAt(0);
+          if (o < 33 || o > 126) return null;
+          if (c >= 'a' && c <= 'z') lower = true;
+          if (c >= 'A' && c <= 'Z') upper = true;
+        }
+        if (lower && upper) return null;
+        addr = addr.toLowerCase();
+        const pos = addr.lastIndexOf('1');
+        if (pos < 1 || pos + 7 > addr.length) return null;
+        const hrp = addr.slice(0, pos);
+        const data = [];
+        for (let i = pos + 1; i < addr.length; i++) {
+          const d = B32_CHARSET.indexOf(addr[i]);
+          if (d === -1) return null;
+          data.push(d);
+        }
+        return { hrp, data };
+      }
+      function convertbits(data, from, to, pad) {
+        let acc = 0, bits = 0; const ret = []; const maxv = (1 << to) - 1;
+        for (const value of data) {
+          if (value < 0 || (value >> from) !== 0) return null;
+          acc = (acc << from) | value; bits += from;
+          while (bits >= to) { bits -= to; ret.push((acc >> bits) & maxv); }
+        }
+        if (pad) { if (bits) ret.push((acc << (to - bits)) & maxv); }
+        else if (bits >= from || ((acc << (to - bits)) & maxv)) return null;
+        return ret;
+      }
+      function isValidTaproot(addr) {
+        const dec = b32Decode(addr);
+        if (!dec || dec.hrp !== 'bc' || dec.data.length < 1) return false;
+        if (dec.data[0] !== 1) return false;                                   // taproot = witness v1
+        if (b32Polymod(b32HrpExpand('bc').concat(dec.data)) !== BECH32M_CONST) return false;
+        const prog = convertbits(dec.data.slice(1), 5, 8, false);
+        return !!prog && prog.length === 32;
+      }
+
+      // ---- modal styling ----
+      const style = document.createElement('style');
+      style.textContent = `
+        .wm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;z-index:9999;}
+        .wm-box{background:#15171c;border:1px solid #2a2e37;border-radius:10px;width:400px;max-width:92vw;padding:18px;color:#e6e6e6;font-family:system-ui,sans-serif;box-shadow:0 12px 40px rgba(0,0,0,.6);}
+        .wm-title{font-size:16px;font-weight:700;color:#f4b942;margin-bottom:12px;}
+        .wm-label{font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:#9aa0ac;margin-bottom:4px;}
+        .wm-input{width:100%;box-sizing:border-box;background:#0d0f13;color:#e6e6e6;border:1px solid #2a2e37;border-radius:6px;padding:9px;font-family:monospace;font-size:13px;}
+        .wm-input:focus{outline:none;border-color:#f4b942;}
+        .wm-msg{font-size:12px;margin-top:10px;min-height:16px;}
+        .wm-msg.err{color:#ff6b6b;} .wm-msg.ok{color:#6bdc8a;} .wm-msg.info{color:#9aa0ac;}
+        .wm-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;}
+        .wm-btn{background:#23262e;color:#e6e6e6;border:1px solid #343845;border-radius:6px;padding:8px 14px;cursor:pointer;font-size:13px;}
+        .wm-btn:hover{background:#2e333d;}
+        .wm-btn.primary{background:#f4b942;color:#1a1a1a;border-color:#f4b942;font-weight:700;}
+        .wm-btn.primary:disabled{opacity:.4;cursor:not-allowed;}
+        .wm-list{display:flex;flex-direction:column;gap:8px;margin-top:6px;}
+        .wm-slot{display:flex;justify-content:space-between;align-items:center;gap:8px;background:#0d0f13;border:1px solid #2a2e37;border-radius:6px;padding:10px;cursor:pointer;}
+        .wm-slot:hover{border-color:#f4b942;}
+        .wm-slot.empty{opacity:.7;}
+        .wm-slot .nm{font-size:13px;}
+        .wm-slot .sub{font-size:11px;color:#9aa0ac;}
+      `;
+      document.head.appendChild(style);
+
+      const overlay = document.createElement('div');
+      overlay.className = 'wm-overlay';
+      overlay.style.display = 'none';
+      overlay.innerHTML = '<div class="wm-box"><div class="wm-title"></div><div class="wm-content"></div><div class="wm-msg"></div><div class="wm-actions"></div></div>';
+      document.body.appendChild(overlay);
+      const elTitle = overlay.querySelector('.wm-title');
+      const elContent = overlay.querySelector('.wm-content');
+      const elMsg = overlay.querySelector('.wm-msg');
+      const elActions = overlay.querySelector('.wm-actions');
+
+      function closeModal() { overlay.style.display = 'none'; }
+      overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+      function setMsg(text, kind) { elMsg.textContent = text || ''; elMsg.className = 'wm-msg ' + (kind || 'info'); }
+      function btn(label, cls, onClick) {
+        const b = document.createElement('button');
+        b.className = 'wm-btn ' + (cls || '');
+        b.textContent = label;
+        b.addEventListener('click', onClick);
+        return b;
+      }
+      function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+      function nowISO() { return new Date().toISOString(); }
+
+      const LS_KEY = 'fw_wallet';
+      function lastWallet() { try { return localStorage.getItem(LS_KEY) || ''; } catch (e) { return ''; } }
+      function rememberWallet(w) { try { localStorage.setItem(LS_KEY, w); } catch (e) {} }
+
+      // Step 1 — collect + validate the wallet, then hand off to next(wallet).
+      function askWallet(titleText, next) {
+        overlay.style.display = 'flex';
+        elTitle.textContent = titleText;
+        elActions.innerHTML = '';
+        setMsg('Enter your bc1p (Taproot) Bitcoin address.', 'info');
+        elContent.innerHTML =
+          '<div class="wm-label">wallet</div>' +
+          '<input class="wm-input" id="wm-wallet" spellcheck="false" autocomplete="off" placeholder="bc1p…">';
+        const input = elContent.querySelector('#wm-wallet');
+        input.value = lastWallet();
+        const cancel = btn('Cancel', '', closeModal);
+        const cont = btn('Continue', 'primary', () => {
+          const w = input.value.trim().toLowerCase();
+          if (!isValidTaproot(w)) { setMsg('That is not a valid bc1p Taproot address.', 'err'); return; }
+          rememberWallet(w);
+          next(w);
+        });
+        function validate() {
+          const w = input.value.trim().toLowerCase();
+          const ok = isValidTaproot(w);
+          cont.disabled = !ok;
+          if (!w) setMsg('Enter your bc1p (Taproot) Bitcoin address.', 'info');
+          else if (ok) setMsg('Valid Taproot address ✓', 'ok');
+          else setMsg('Must be a valid bc1p Taproot address.', 'err');
+        }
+        input.addEventListener('input', validate);
+        input.addEventListener('keydown', e => { if (e.key === 'Enter' && !cont.disabled) cont.click(); });
+        elActions.append(cancel, cont);
+        validate();
+        input.focus();
+      }
+
+      // ---- SAVE: pick one of 3 slots (overwrite if full) ----
+      async function flowSave(wallet) {
+        elTitle.textContent = 'Save Project';
+        elContent.innerHTML = ''; elActions.innerHTML = '';
+        setMsg('Loading your slots…', 'info');
+        let summary;
+        try { summary = await rpc('list_wallet', { p_wallet: wallet }); }
+        catch (e) { setMsg('Could not reach cloud: ' + e.message, 'err'); return; }
+        const names = [summary && summary.project1, summary && summary.project2, summary && summary.project3];
+        setMsg('Choose a slot to save into (up to 3 per wallet).', 'info');
+
+        const wrap = document.createElement('div'); wrap.className = 'wm-list';
+        let chosen = null; const slotEls = [];
+        const nameLbl = document.createElement('div'); nameLbl.className = 'wm-label'; nameLbl.style.marginTop = '12px'; nameLbl.textContent = 'project name';
+        const nameInput = document.createElement('input'); nameInput.className = 'wm-input'; nameInput.value = projectName || 'Untitled Fireworks';
+        const cancel = btn('Cancel', '', closeModal);
+        const saveBtnEl = btn('Save', 'primary', async () => {
+          if (!chosen) { setMsg('Pick a slot first.', 'err'); return; }
+          const nm = (nameInput.value || 'Untitled Fireworks').trim();
+          projectName = nm;
+          saveBtnEl.disabled = true; setMsg('Saving…', 'info');
+          try {
+            await rpc('save_project', { p_wallet: wallet, p_slot: chosen, p_json: { name: nm, savedAt: nowISO(), timeline: timeline } });
+            setMsg('Saved to slot ' + chosen + ' ✓', 'ok');
+            setTimeout(closeModal, 900);
+          } catch (e) { setMsg('Save failed: ' + e.message, 'err'); saveBtnEl.disabled = false; }
+        });
+        saveBtnEl.disabled = true;
+
+        names.forEach((nm, i) => {
+          const slot = i + 1;
+          const el = document.createElement('div');
+          el.className = 'wm-slot' + (nm ? '' : ' empty');
+          el.innerHTML = '<div><div class="nm">' + (nm ? escapeHtml(nm) : 'Slot ' + slot + ' — empty') + '</div>' +
+            '<div class="sub">' + (nm ? 'Overwrite slot ' + slot : 'Save here') + '</div></div>';
+          el.addEventListener('click', () => {
+            chosen = slot;
+            slotEls.forEach(s => s.style.borderColor = '#2a2e37');
+            el.style.borderColor = '#f4b942';
+            if (nm && nameInput.value === (projectName || 'Untitled Fireworks')) nameInput.value = nm;
+            saveBtnEl.disabled = false;
+          });
+          slotEls.push(el); wrap.appendChild(el);
+        });
+        elContent.append(wrap, nameLbl, nameInput);
+        elActions.append(cancel, saveBtnEl);
+      }
+
+      // ---- IMPORT: list saved projects + editable export, load chosen ----
+      async function flowImport(wallet) {
+        elTitle.textContent = 'Import Project';
+        elContent.innerHTML = ''; elActions.innerHTML = '';
+        setMsg('Searching…', 'info');
+        let data;
+        try { data = await rpc('get_wallet', { p_wallet: wallet }); }
+        catch (e) { setMsg('Could not reach cloud: ' + e.message, 'err'); return; }
+        const items = [];
+        if (data) {
+          [data.project1, data.project2, data.project3].forEach((p, i) => {
+            if (p) items.push({ label: p.name || ('Project ' + (i + 1)), sub: 'Saved project', proj: p });
+          });
+          if (data.export_json) items.push({ label: data.export_json.name || 'Exported show', sub: 'Exported (editable)', proj: data.export_json });
+        }
+        if (!items.length) { setMsg('No saved projects found for that wallet.', 'err'); elActions.append(btn('Close', '', closeModal)); return; }
+        setMsg('Pick a project to load.', 'info');
+        const wrap = document.createElement('div'); wrap.className = 'wm-list';
+        items.forEach(it => {
+          const el = document.createElement('div'); el.className = 'wm-slot';
+          el.innerHTML = '<div><div class="nm">' + escapeHtml(it.label) + '</div><div class="sub">' + it.sub + '</div></div>';
+          el.addEventListener('click', () => loadProject(it.proj));
+          wrap.appendChild(el);
+        });
+        elContent.appendChild(wrap);
+        elActions.append(btn('Cancel', '', closeModal));
+      }
+      function loadProject(p) {
+        if (!p || !Array.isArray(p.timeline)) { setMsg('That project looks invalid.', 'err'); return; }
+        timeline = p.timeline;
+        projectName = p.name || 'Imported Project';
+        currentTime = 0;
+        placedAnimation = null;
+        updateTimeline();
+        drawPreview();
+        updateTimeDisplay();
+        setMsg('Loaded "' + projectName + '" ✓', 'ok');
+        setTimeout(closeModal, 700);
+      }
+
+      // ---- EXPORT: build show + editable sidecar, confirm overwrite ----
+      async function flowExport(wallet) {
+        elTitle.textContent = 'Export Show';
+        elContent.innerHTML = ''; elActions.innerHTML = '';
+        setMsg('Checking for an existing export…', 'info');
+        let summary;
+        try { summary = await rpc('list_wallet', { p_wallet: wallet }); }
+        catch (e) { setMsg('Could not reach cloud: ' + e.message, 'err'); return; }
+        const proceed = async () => {
+          elActions.innerHTML = '';
+          setMsg('Building and uploading your show…', 'info');
+          try {
+            const html = generateInscription();
+            const sidecar = { name: projectName || 'Untitled Fireworks', savedAt: nowISO(), timeline: timeline };
+            await rpc('save_export', { p_wallet: wallet, p_html: html, p_json: sidecar });
+            setMsg('Export saved ✓', 'ok');
+            setTimeout(closeModal, 1000);
+          } catch (e) { setMsg('Export failed: ' + e.message, 'err'); }
+        };
+        if (summary && summary.has_export) {
+          elContent.innerHTML = '<div class="wm-slot" style="cursor:default"><div><div class="nm">An export already exists for this wallet.</div><div class="sub">Exporting again replaces it.</div></div></div>';
+          setMsg('will save over existing import, continue?', 'info');
+          elActions.append(btn('Cancel', '', closeModal), btn('Continue', 'primary', proceed));
+        } else {
+          proceed();
+        }
+      }
+
+      window.openWalletFlow = function (mode) {
+        if (mode === 'save') askWallet('Save Project', flowSave);
+        else if (mode === 'import') askWallet('Import Project', flowImport);
+        else if (mode === 'export') askWallet('Export Show', flowExport);
+      };
+    })();
+  </script>
+
+  <!-- ES-module shim: loads the inscribed-style modules via the import map,
+       exposes them as globals for the classic script above, then starts the
+       Three.js preview. Deferred by default, so it runs after the script above
+       has defined window.startThreePreview. -->
+  <script type="module">
+    import * as THREE from 'three';
+    import { EffectComposer, RenderPass, ShaderPass, UnrealBloomPass, FullScreenQuad } from 'three-bloom';
+    window.THREE = THREE;
+    window.EffectComposer = EffectComposer;
+    window.RenderPass = RenderPass;
+    window.ShaderPass = ShaderPass;
+    window.UnrealBloomPass = UnrealBloomPass;
+    window.FullScreenQuad = FullScreenQuad;
+    if (window.startThreePreview) window.startThreePreview();
+    else console.error('startThreePreview not defined — classic script failed earlier.');
+  </script>
+
+  <!-- Block Builder engine: exposes window.BlockShow.generateShow for the
+       "⚡ Block Builder" panel. Deferred module; the panel only calls it on click. -->
+  <script type="module" src="block-shows/engine/showgen.js"></script>
+</body>
+</html>
