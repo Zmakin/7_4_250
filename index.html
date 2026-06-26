@@ -3,12 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ordinals Fireworks Builder</title>
+  <title>America 250 — Fireworks Builder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { 
-      font-family: 'Segoe UI', Tahoma, sans-serif; 
-      background: #1a1a1a; 
+    body {
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background: #060c1e;
       color: #fff;
       overflow: hidden;
       height: 100vh;
@@ -17,43 +20,105 @@
     }
 
     #header {
-      background: #2a2a2a;
-      padding: 12px 20px;
-      border-bottom: 2px solid #444;
+      position: relative;
+      height: 90px;
+      border-bottom: 3px solid #001a4d;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      padding: 10px 20px;
+      overflow: hidden;
     }
 
-    h1 { font-size: 20px; font-weight: 600; }
+    #flag-canvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
+
+    #header-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(90deg,
+        rgba(0,5,20,0.65) 0%,
+        rgba(0,5,20,0.28) 55%,
+        rgba(0,5,20,0.55) 100%);
+      z-index: 1;
+    }
+
+    #header-brand {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 4px;
+    }
+
+    h1 {
+      font-family: 'Bebas Neue', Impact, 'Arial Narrow', sans-serif;
+      font-size: 36px;
+      font-weight: 400;
+      letter-spacing: 5px;
+      color: #fff;
+      text-shadow: 0 0 14px rgba(0,0,0,1), 0 2px 8px rgba(0,0,0,1);
+      line-height: 1;
+    }
+
+    #header-sub {
+      font-size: 15px;
+      color: #eef3ff;
+      text-shadow: 0 1px 6px rgba(0,0,0,1);
+      letter-spacing: 0.2px;
+    }
+
+    .logo-o {
+      height: 1.3em;
+      width: auto;
+      vertical-align: middle;
+      display: inline-block;
+      margin-right: -1px;
+    }
 
     .header-buttons {
+      position: relative;
+      z-index: 2;
       display: flex;
       gap: 10px;
+      margin-left: auto;
     }
 
     .header-buttons button {
       padding: 8px 16px;
-      background: #444;
-      border: none;
-      color: white;
+      background: rgba(10,25,65,0.82);
+      border: 1px solid #4a6aaa;
+      color: #c8d8f0;
       border-radius: 4px;
       cursor: pointer;
       font-size: 13px;
       font-weight: 600;
-      transition: background 0.2s;
+      transition: background 0.2s, border-color 0.2s;
+      backdrop-filter: blur(4px);
     }
 
     .header-buttons button:hover {
-      background: #555;
+      background: rgba(26,60,130,0.9);
+      border-color: #7aaaff;
     }
 
     #import-btn {
-      background: #FF9800 !important;
+      background: #c8a400 !important;
+      border-color: #a88600 !important;
+      color: #000 !important;
     }
 
     #import-btn:hover {
-      background: #F57C00 !important;
+      background: #a88600 !important;
     }
 
     #main {
@@ -64,17 +129,19 @@
 
     #timeline {
       width: 350px;
-      background: #252525;
-      border-right: 2px solid #444;
+      background: rgba(10,20,40,0.68);
+      border-right: 2px solid #1e3a6e;
       display: flex;
       flex-direction: column;
     }
 
     #timeline-header {
       padding: 15px;
-      background: #2d2d2d;
-      border-bottom: 1px solid #444;
+      background: rgba(13,26,58,0.72);
+      border-bottom: 1px solid #1e3a6e;
       font-weight: 600;
+      color: #c8d8f0;
+      letter-spacing: 0.5px;
     }
 
     #timeline-list {
@@ -84,7 +151,7 @@
     }
 
     .timeline-item {
-      background: #333;
+      background: #111e40;
       margin-bottom: 8px;
       padding: 10px;
       border-radius: 4px;
@@ -96,18 +163,18 @@
     }
 
     .timeline-item:hover {
-      background: #3a3a3a;
+      background: #162250;
     }
 
     .timeline-item-time {
       font-weight: 600;
       margin-bottom: 4px;
-      color: #4CAF50;
+      color: #FFD700;
     }
 
     .timeline-item-details {
       font-size: 11px;
-      color: #aaa;
+      color: #8aabcf;
     }
 
     .delete-btn {
@@ -127,8 +194,32 @@
       background: #d32f2f;
     }
 
+    #mint-blob {
+      margin: 0 10px 5px;
+      padding: 3px 10px;
+      background: rgba(240,244,255,0.93);
+      border: 1px solid #b0c0e0;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #0d1a3a;
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    #mint-blob a {
+      color: #BF0A30;
+      text-decoration: none;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      vertical-align: middle;
+    }
+
+    #mint-blob a:hover { color: #002868; text-decoration: underline; }
+
     #export-btn {
-      margin: 10px;
+      margin: 0 10px 10px;
       padding: 12px;
       background: #4CAF50;
       border: none;
@@ -137,6 +228,7 @@
       border-radius: 4px;
       cursor: pointer;
       font-size: 14px;
+      letter-spacing: 0.5px;
     }
 
     #export-btn:hover {
@@ -146,25 +238,31 @@
     #workspace {
       flex: 1;
       display: flex;
-      flex-direction: column;
-      padding: 20px;
-      gap: 20px;
+      flex-direction: row;
+      padding: 12px;
+      gap: 12px;
+      overflow: hidden;
     }
 
     #picker {
-      background: #2a2a2a;
-      padding: 20px;
+      width: 450px;
+      flex-shrink: 0;
+      background: rgba(13,22,48,0.68);
       border-radius: 8px;
+      border: 1px solid #1e3a6e;
       display: flex;
-      gap: 20px;
-      align-items: flex-start;
+      flex-direction: column;
+      overflow: hidden;
     }
 
     #picker-controls {
       flex: 1;
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 12px;
+      overflow-y: auto;
+      min-height: 0;
     }
 
     .control-group {
@@ -176,14 +274,14 @@
     label {
       font-size: 12px;
       font-weight: 600;
-      color: #aaa;
+      color: #7aabcf;
       text-transform: uppercase;
     }
 
     select, input[type="range"] {
       padding: 8px;
-      background: #333;
-      border: 1px solid #555;
+      background: #111e3a;
+      border: 1px solid #2a4080;
       color: #fff;
       border-radius: 4px;
       font-size: 14px;
@@ -197,13 +295,13 @@
       width: 40px;
       height: 40px;
       border-radius: 4px;
-      border: 2px solid #555;
+      border: 2px solid #2a4080;
     }
 
     .button-group {
-      grid-column: span 3;
       display: flex;
-      gap: 10px;
+      flex-direction: column;
+      gap: 6px;
     }
 
     button {
@@ -219,7 +317,7 @@
     #place-btn {
       background: #2196F3;
       color: white;
-      flex: 1;
+      width: 100%;
     }
 
     #place-btn:hover {
@@ -227,23 +325,26 @@
     }
 
     #accept-btn {
-      background: #4CAF50;
-      color: white;
-      flex: 1;
+      background: #c8a400;
+      color: #000;
+      width: 100%;
+      font-weight: 700;
     }
 
     #accept-btn:hover {
-      background: #45a049;
+      background: #a88600;
     }
 
     #accept-btn:disabled {
-      background: #555;
+      background: #1e2e50;
+      color: #4a5a7a;
       cursor: not-allowed;
     }
 
     #clear-placed-btn {
       background: #f44336;
       color: white;
+      width: 100%;
     }
 
     #clear-placed-btn:hover {
@@ -251,23 +352,37 @@
     }
 
     #clear-placed-btn:disabled {
-      background: #555;
+      background: #1e2e50;
+      color: #4a5a7a;
       cursor: not-allowed;
     }
 
     #picker-preview-container {
-      width: 220px;
+      width: 100%;
+      flex-shrink: 0;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      align-items: center;
+      gap: 5px;
+      padding: 0 20px 20px;
+    }
+
+    #cat-type-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    #cat-type-row .control-group {
+      flex: 1;
+      min-width: 0;
     }
 
     #picker-preview {
-      width: 220px;
-      height: 220px;
+      width: 60%;
+      aspect-ratio: 1 / 1;
       background: #000;
       border-radius: 8px;
-      border: 2px solid #555;
+      border: 2px solid #2a4080;
       position: relative;
       overflow: hidden;
     }
@@ -294,43 +409,69 @@
     .preview-controls button {
       padding: 6px 12px;
       font-size: 11px;
-      background: #444;
-      color: white;
+      background: #111e3a;
+      border: 1px solid #2a4080;
+      color: #c8d8f0;
     }
 
     .preview-controls button:hover {
-      background: #555;
+      background: #1a2e55;
     }
 
     #canvas-area {
       flex: 1;
-      background: #2a2a2a;
+      background: rgba(13,22,48,0.68);
       border-radius: 8px;
-      padding: 20px;
+      border: 1px solid #1e3a6e;
+      padding: 12px;
       display: flex;
       flex-direction: column;
-      gap: 15px;
+      gap: 8px;
       min-height: 0;
+      overflow: hidden;
     }
+
+    #global-instructions {
+      font-size: 14px;
+      color: #fff;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    #timeline-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    #timeline-row #timeline-slider { flex: 1; }
 
     #playback-controls {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      flex-shrink: 0;
     }
 
     #playback-controls button {
-      background: #444;
-      color: white;
+      background: #111e3a;
+      border: 1px solid #2a4080;
+      color: #c8d8f0;
       padding: 8px 16px;
     }
 
     #playback-controls button:hover {
-      background: #555;
+      background: #1a2e55;
+      border-color: #4a6aaa;
     }
 
     #playback-controls button.active {
-      background: #4CAF50;
+      background: #BF0A30;
+      border-color: #BF0A30;
+      color: #fff;
     }
 
     #timeline-slider {
@@ -353,16 +494,18 @@
       min-height: 0;
     }
 
-    /* The global preview is a square that fits the available height of the
-       grey canvas-area box, staying 1:1 no matter the window size. */
+    /* Global preview fills the available canvas-area height, 1:1 ratio */
     #preview-container {
       background: #000;
       border-radius: 8px;
       position: relative;
       overflow: hidden;
-      height: 100%;
-      max-width: 100%;
+      flex: 1;
+      min-height: 0;
       aspect-ratio: 1 / 1;
+      align-self: center;
+      max-height: 100%;
+      max-width: 100%;
     }
 
     #handle-canvas {
@@ -383,36 +526,79 @@
 
     #preview-instructions {
       padding: 15px;
-      background: rgba(0,0,0,0.3);
+      background: rgba(5,15,40,0.7);
+      border: 1px solid #1e3a6e;
       border-radius: 4px;
       font-size: 12px;
-      color: #aaa;
+      color: #8aabcf;
       min-width: 200px;
     }
 
     #preview-instructions strong {
-      color: #4CAF50;
+      color: #FFD700;
       display: block;
       margin-bottom: 8px;
+      letter-spacing: 0.5px;
     }
 
     #preview-instructions div {
       margin: 4px 0;
     }
 
-    .hint {
+    .hint { display: none; }
+
+    #color2-slot {
+      min-height: 58px;
+    }
+
+    #picker-instructions {
+      font-size: 14px;
+      color: #fff;
+      line-height: 1.8;
+    }
+
+    #frame-info-group {
+      flex-direction: row !important;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    #frame-info-group label {
+      margin: 0;
+      white-space: nowrap;
+    }
+
+    #preview-reload {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      z-index: 10;
+      padding: 3px 8px;
       font-size: 11px;
-      color: #888;
-      margin-top: 4px;
-      grid-column: span 3;
+      background: rgba(17,30,58,0.85);
+      border: 1px solid #2a4080;
+      color: #c8d8f0;
+      border-radius: 4px;
+      cursor: pointer;
+      width: auto;
+    }
+
+    #preview-reload:hover {
+      background: rgba(26,46,85,0.95);
+    }
+
+    .picker-spacer {
+      flex: 1;
+      min-height: 8px;
     }
 
     #frame-count-display {
       font-family: 'Courier New', monospace;
       font-size: 13px;
-      color: #4CAF50;
+      color: #FFD700;
       padding: 6px 8px;
-      background: rgba(0,0,0,0.3);
+      background: rgba(0,0,0,0.4);
       border-radius: 4px;
     }
 
@@ -421,7 +607,7 @@
       transform: translate(-50%, 0);
       padding: 6px 12px;
       background: rgba(0,0,0,0.85);
-      border: 1px solid #4CAF50;
+      border: 1px solid #FFD700;
       border-radius: 6px;
       color: #fff;
       font-size: 12px;
@@ -438,7 +624,7 @@
     }
 
     #frame-toast .toast-label {
-      color: #4CAF50;
+      color: #FFD700;
       font-weight: bold;
     }
 
@@ -449,7 +635,12 @@
 </head>
 <body>
   <div id="header">
-    <h1>🎆 Ordinals Fireworks Builder</h1>
+    <canvas id="flag-canvas"></canvas>
+    <div id="header-overlay"></div>
+    <div id="header-brand">
+      <h1>AMERICA <span style="color:#E8082E">2</span>5<span style="color:#3a8eef">0</span> &mdash; &#8220;7_4_<span style="color:#E8082E">2</span>5<span style="color:#3a8eef">0</span>&#8221;</h1>
+      <div id="header-sub">Fireworks builder &middot; create your own special show up to 15 sec long</div>
+    </div>
     <div class="header-buttons">
       <button id="new-btn">New</button>
       <button id="import-btn">Import Project</button>
@@ -460,15 +651,15 @@
   <div id="main">
     <div id="timeline">
       <style>
-        #block-builder{background:#15171c;border:1px solid #2a2e37;border-radius:8px;padding:10px;margin-bottom:12px;}
-        #block-builder .bb-title{font-weight:700;font-size:13px;color:#f4b942;margin-bottom:8px;letter-spacing:.3px;}
+        #block-builder{background:rgba(8,14,32,0.72);border:1px solid #1e3a6e;border-radius:8px;padding:10px;margin-bottom:12px;}
+        #block-builder .bb-title{font-weight:700;font-size:13px;color:#FFD700;margin-bottom:8px;letter-spacing:.3px;}
         #block-builder .bb-row{display:flex;gap:6px;align-items:center;margin-bottom:6px;}
-        #block-builder input[type=number]{flex:1;min-width:0;background:#0d0f13;color:#e6e6e6;border:1px solid #2a2e37;border-radius:5px;padding:6px;font-family:monospace;}
-        #block-builder button{background:#23262e;color:#e6e6e6;border:1px solid #343845;border-radius:5px;padding:6px 9px;cursor:pointer;font-size:13px;}
-        #block-builder button:hover{background:#2e333d;}
+        #block-builder input[type=number]{flex:1;min-width:0;background:#050d20;color:#c8d8f0;border:1px solid #1e3a6e;border-radius:5px;padding:6px;font-family:monospace;}
+        #block-builder button{background:#111e3a;color:#c8d8f0;border:1px solid #2a4480;border-radius:5px;padding:6px 9px;cursor:pointer;font-size:13px;}
+        #block-builder button:hover{background:#1a2e55;}
         #block-builder .bb-nav button{font-weight:700;padding:6px 12px;}
-        #block-builder #bb-status{flex:1;text-align:center;font-size:11px;color:#9aa0ac;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-        #block-builder .bb-listlabel{display:flex;align-items:center;gap:6px;font-size:11px;color:#9aa0ac;margin-top:2px;cursor:pointer;}
+        #block-builder #bb-status{flex:1;text-align:center;font-size:11px;color:#6a8ab0;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+        #block-builder .bb-listlabel{display:flex;align-items:center;gap:6px;font-size:11px;color:#6a8ab0;margin-top:2px;cursor:pointer;}
       </style>
       <div id="block-builder">
         <div class="bb-title">⚡ Block Builder — Bitcoin July 4th</div>
@@ -485,64 +676,66 @@
       </div>
       <div id="timeline-header">Timeline (Max 15s)</div>
       <div id="timeline-list"></div>
+      <div id="mint-blob">Mint 7/1&ndash;7/7/2026 on <a href="https://ord-dropz.xyz/" target="_blank" rel="noopener"><img src="logo-drop.png" class="logo-o" alt="O">rd-dropz.xyz</a></div>
       <button id="export-btn">Export Inscription HTML</button>
     </div>
 
     <div id="workspace">
+
+      <!-- ── Middle column: picker ── -->
       <div id="picker">
         <div id="picker-controls">
-          <div class="control-group">
-            <label>Category</label>
-            <select id="animation-category">
-              <option value="body">💥 Body</option>
-              <option value="tail">🔥 Tail</option>
-              <option value="shape">⭕ Shape</option>
-              <option value="background">🖼️ Background</option>
-              <option value="foreground">🎭 Foreground</option>
-              <option value="term">🎆 Term — ends the show</option>
-            </select>
-            <div id="moon-phase-group" style="display:none;margin-top:8px;">
-              <label style="display:block;white-space:nowrap;">Moon Phase: <span id="moon-phase-value">Full</span></label>
-              <input type="range" id="moon-phase-slider" min="0" max="1" step="0.02" value="0.5" style="width:100%;display:block;box-sizing:border-box;height:26px;">
+
+          <div id="cat-type-row">
+            <div class="control-group">
+              <label>Category</label>
+              <select id="animation-category">
+                <option value="body">💥 Body</option>
+                <option value="tail">🔥 Tail</option>
+                <option value="shape">⭕ Shape</option>
+                <option value="background">🖼️ Background</option>
+                <option value="foreground">🎭 Foreground</option>
+                <option value="term">🎆 Term — ends the show</option>
+              </select>
+              <div id="moon-phase-group" style="display:none;margin-top:6px;">
+                <label style="display:block;">Moon Phase: <span id="moon-phase-value">Full</span></label>
+                <input type="range" id="moon-phase-slider" min="0" max="1" step="0.02" value="0.5" style="width:100%;display:block;box-sizing:border-box;height:26px;">
+              </div>
+            </div>
+
+            <div class="control-group">
+              <label>Animation Type</label>
+              <select id="animation-type">
+                <!-- Populated dynamically -->
+              </select>
+              <div id="moon-prog-group" style="display:none;margin-top:6px;">
+                <label style="display:block;">Moon Pos (E→W): <span id="moon-prog-value">Center</span></label>
+                <input type="range" id="moon-prog-slider" min="0" max="1" step="0.02" value="0.5" style="width:100%;display:block;box-sizing:border-box;height:26px;">
+              </div>
             </div>
           </div>
 
-          <div class="control-group">
-            <label>Animation Type</label>
-            <select id="animation-type">
-              <!-- Populated dynamically based on category -->
-            </select>
-            <div id="moon-prog-group" style="display:none;margin-top:8px;">
-              <label style="display:block;white-space:nowrap;">Moon Position (E→W): <span id="moon-prog-value">Center</span></label>
-              <input type="range" id="moon-prog-slider" min="0" max="1" step="0.02" value="0.5" style="width:100%;display:block;box-sizing:border-box;height:26px;">
-            </div>
-          </div>
-
-          <div class="control-group" id="sub-type-group" style="display: none;">
+          <div class="control-group" id="sub-type-group" style="display:none;">
             <label>Shape Style</label>
-            <select id="sub-type">
-              <!-- For shapes -->
-            </select>
+            <select id="sub-type"></select>
           </div>
 
           <div class="control-group" id="color-group">
             <label>Color</label>
-            <div style="display: flex; gap: 10px; align-items: center;">
-              <input type="color" id="color-picker" value="#FF9632" style="width: 60px; height: 40px; cursor: pointer;">
-              <input type="text" id="color-hex" value="#FF9632" style="flex: 1; font-family: monospace;" maxlength="7">
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input type="color" id="color-picker" value="#FF9632" style="width:50px;height:36px;cursor:pointer;">
+              <input type="text" id="color-hex" value="#FF9632" style="flex:1;font-family:monospace;" maxlength="7">
             </div>
           </div>
 
-          <div class="control-group" id="frame-info-group">
-            <label>Animation Length</label>
-            <div id="frame-count-display">Analyzing…</div>
-          </div>
-
-          <div class="control-group" id="color2-group" style="display: none;">
-            <label>Color 2 (Outer)</label>
-            <div style="display: flex; gap: 10px; align-items: center;">
-              <input type="color" id="color2-picker" value="#FF6464" style="width: 60px; height: 40px; cursor: pointer;">
-              <input type="text" id="color2-hex" value="#FF6464" style="flex: 1; font-family: monospace;" maxlength="7">
+          <!-- Color 2 slot — always reserves space so nothing jumps -->
+          <div id="color2-slot">
+            <div class="control-group" id="color2-group" style="display:none;">
+              <label>Color 2 (Outer)</label>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <input type="color" id="color2-picker" value="#FF6464" style="width:50px;height:36px;cursor:pointer;">
+                <input type="text" id="color2-hex" value="#FF6464" style="flex:1;font-family:monospace;" maxlength="7">
+              </div>
             </div>
           </div>
 
@@ -550,54 +743,64 @@
             <label>Speed: <span id="speed-value">1.0</span>x</label>
             <input type="range" id="speed-slider" min="0.5" max="2" step="0.1" value="1">
           </div>
-          <div class="control-group" id="term-speed-msg" style="display:none">
-            <label style="font-style:italic;opacity:0.7;font-size:0.85em">Term placed on peak frame by default, adjust accordingly</label>
+          <div class="control-group" id="term-speed-msg" style="display:none;">
+            <label style="font-style:italic;opacity:0.7;font-size:0.85em;">Term placed on peak frame by default, adjust accordingly</label>
+          </div>
+
+          <div class="control-group" id="frame-info-group">
+            <label>Animation Length</label>
+            <div id="frame-count-display">Analyzing…</div>
           </div>
 
           <div class="button-group">
             <button id="place-btn">Place in Preview</button>
             <button id="accept-btn" disabled>Accept to Timeline</button>
-            <button id="clear-placed-btn" disabled>Clear Placed</button>
           </div>
 
-          <div class="hint">
-            1. Choose animation & settings → 2. Place in preview → 3. Position/rotate/scale → 4. Accept to timeline
+          <div id="picker-instructions">
+            1. Choose animation &amp; settings &nbsp;·&nbsp; 2. Place in preview &nbsp;·&nbsp; 3. Position / rotate / scale &nbsp;·&nbsp; 4. Accept to timeline
           </div>
+
+          <div class="picker-spacer"></div>
+
+          <button id="clear-placed-btn" disabled>Clear Placed</button>
+
         </div>
 
+        <!-- Picker preview — 1:1, fills column width -->
         <div id="picker-preview-container">
-          <div id="picker-preview">          </div>
-          <div class="preview-controls">
-            <button id="preview-reload">⟳ Reload</button>
+          <div id="picker-preview">
+            <button id="preview-reload">⟳</button>
           </div>
         </div>
       </div>
 
+      <!-- ── Right panel: global preview ── -->
       <div id="canvas-area">
+
+        <div id="preview-container">
+          <canvas id="preview-canvas"></canvas>
+          <canvas id="handle-canvas"></canvas>
+          <div id="frame-toast"></div>
+        </div>
+
+        <div id="global-instructions">
+          L-drag: Move &nbsp;·&nbsp; R-drag: Rotate &nbsp;·&nbsp; S+move: Scale &nbsp;·&nbsp; Space: Swap frame
+        </div>
+
+        <div id="timeline-row">
+          <input type="range" id="timeline-slider" min="0" max="15000" value="0" step="16.67">
+          <div id="time-display">0.00s / 15.00s</div>
+        </div>
+
         <div id="playback-controls">
           <button id="play-btn">▶ Play</button>
           <button id="pause-btn">⏸ Pause</button>
           <button id="step-back">⏮ -Frame</button>
           <button id="step-forward">+Frame ⏭</button>
-          <button id="reset-btn">⏮⏮ Reset</button>          <input type="range" id="timeline-slider" min="0" max="15000" value="0" step="16.67">
-          <div id="time-display">0.00s / 15.00s</div>
+          <button id="reset-btn">⏮⏮ Reset</button>
         </div>
 
-        <div id="preview-section">
-          <div id="preview-container">
-            <canvas id="preview-canvas"></canvas>
-            <canvas id="handle-canvas"></canvas>
-            <div id="frame-toast"></div>
-          </div>
-
-          <div id="preview-instructions">
-            <strong>Controls:</strong>
-            <div>Left-click drag: Move</div>
-            <div>Right-click drag: Rotate</div>
-            <div>S + mouse move: Scale</div>
-            <div>Spacebar: Swap frame</div>
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -1124,18 +1327,23 @@
     // polygon shape uses shape.js). The export turns a non-blank id into a full
     // CONTENT_BASE + id URL (see generateInscription).
     const INSCRIPTION_IDS = {
-      'three':                          '0d013bb60fc5bf5a6c77da7371b07dc162ebc7d7f3af0ff3bd00ae5f0c546445i0', // three.js r0.163 (already on-chain)
-      'three-bloom.js': '',   // bloom add-on — inscribe lib/three-bloom.js, paste id here
+      'three':              '0d013bb60fc5bf5a6c77da7371b07dc162ebc7d7f3af0ff3bd00ae5f0c546445i0', // three.js r0.163
+      'three-bloom.min.js': '6fe83473b2a59001f3672c47ed2bb1358a310e2b9a9494d8a8332baa7bb6c693i0', // bloom bundle
       // effects/*.js — paste each id as you inscribe it:
       'peony.js': '', 'willow.js': '', 'waterfall.js': '', 'chrysanthemum.js': '',
       'dahlia.js': '', 'pistil.js': '', 'strobe.js': '', 'dragoneggs.js': '',
-      'spider.js': '', 'fish.js': '', 'palm.js': '', 'brocade.js': '',
+      'spider.js': '', 'fish.js': '', 'palm.js': '',
+      'brocade.js':         '6fe83473b2a59001f3672c47ed2bb1358a310e2b9a9494d8a8332baa7bb6c693i4',
       'fallingleaves.js': '', 'cracklingrain.js': '', 'crossette.js': '',
-      'tourbillion.js': '', 'romancandle.js': '', 'risingtail.js': '', 'comet.js': '',
+      'tourbillion.js': '', 'romancandle.js': '', 'risingtail.js': '',
+      'comet.js':           '6fe83473b2a59001f3672c47ed2bb1358a310e2b9a9494d8a8332baa7bb6c693i1',
       'palmfrond.js': '', 'pearls.js': '', 'shape.js': '',
-      'bg_allblack.js': '', 'bg_navygradient.js': '', 'fg_blackoverlay.js': '',
+      'bg_allblack.js': '',
+      'bg_navygradient.js': '6fe83473b2a59001f3672c47ed2bb1358a310e2b9a9494d8a8332baa7bb6c693i3',
+      'fg_blackoverlay.js': '',
       'bg_starfield.js': '', 'bg_space.js': '', 'term.js': '',
-      'fg_baseball.js': '', 'fg_lakeside.js': '', 'fg_football.js': '', 'fg_park.js': ''
+      'fg_baseball.js':     '6fe83473b2a59001f3672c47ed2bb1358a310e2b9a9494d8a8332baa7bb6c693i2',
+      'fg_lakeside.js': '', 'fg_football.js': '', 'fg_park.js': ''
     };
     // Off-chain base so the exported file can pull inscribed content while you
     // test locally. For the FINAL recursive inscription of the exported show,
@@ -1166,11 +1374,11 @@
       const def = THREE_EFFECTS[type];
       if (def && !_fxLoading.has(type)) {
         _fxLoading.add(type);
-        // Dev-only cache-bust: local effect files are cached so aggressively that
-        // edits "silently don't show" even after Ctrl+F5. Append a version query so
-        // the browser refetches the current file. (No-op for inscription /content/
-        // URLs, which are content-addressed and immutable.)
-        const url = def.module.startsWith('.') ? def.module + '?v=' + FX_CACHE_BUST : def.module;
+        const basename = moduleBasename(def.module);
+        const inscriptionId = INSCRIPTION_IDS[basename];
+        const url = inscriptionId
+          ? CONTENT_BASE + inscriptionId
+          : def.module + '?v=' + FX_CACHE_BUST;
         import(url)
           .then(m => _fxMod.set(type, m))
           .catch(e => console.error('Three effect failed to load:', type, e))
@@ -2682,9 +2890,9 @@
       // modules import the bare specifier 'three'), so bake their URLs at export
       // time: on-chain when an id exists, else local.
       const threeId = INSCRIPTION_IDS['three'];
-      const bloomId = INSCRIPTION_IDS['three-bloom.js'];
+      const bloomId = INSCRIPTION_IDS['three-bloom.min.js'];
       const threeURL = threeId ? CONTENT_BASE + threeId : './lib/three.module.js';
-      const bloomURL = bloomId ? CONTENT_BASE + bloomId : './lib/three-bloom.js';
+      const bloomURL = bloomId ? CONTENT_BASE + bloomId : './lib/three-bloom.min.js';
 
       // Loop point: end 0.5s after the LAST firework (body/tail/shape) finishes
       // — background/foreground layers span the whole show and don't count —
@@ -3293,5 +3501,120 @@
   <!-- Block Builder engine: exposes window.BlockShow.generateShow for the
        "⚡ Block Builder" panel. Deferred module; the panel only calls it on click. -->
   <script type="module" src="block-shows/engine/showgen.js"></script>
+
+  <script>
+  /* ── Night sky starfield + waving American flag ── */
+  (function () {
+    'use strict';
+
+    /* ── Starfield (fixed behind everything) ─────────────────────────────── */
+    var sf = document.createElement('canvas');
+    sf.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:-1;';
+    document.body.insertBefore(sf, document.body.firstChild);
+
+    function paintStars() {
+      sf.width  = window.innerWidth;
+      sf.height = window.innerHeight;
+      var sc = sf.getContext('2d');
+      for (var i = 0; i < 280; i++) {
+        var x = Math.random() * sf.width;
+        var y = Math.random() * sf.height;
+        var r = Math.random() < 0.70 ? 0.5 : Math.random() < 0.90 ? 1.0 : 1.6;
+        var a = 0.20 + Math.random() * 0.80;
+        sc.fillStyle = 'rgba(255,255,255,' + a.toFixed(2) + ')';
+        sc.beginPath();
+        sc.arc(x, y, r, 0, 6.2832);
+        sc.fill();
+      }
+    }
+    paintStars();
+    window.addEventListener('resize', paintStars);
+
+    /* ── Waving American flag ─────────────────────────────────────────────── */
+    var flagCanvas = document.getElementById('flag-canvas');
+    if (!flagCanvas) return;
+    var ctx = flagCanvas.getContext('2d');
+    var offscreen = null;
+    var t = 0;
+
+    function drawStar(oc, cx, cy, r) {
+      var inner = r * 0.4;
+      oc.beginPath();
+      for (var i = 0; i < 10; i++) {
+        var angle  = (i * Math.PI / 5) - Math.PI / 2;
+        var radius = (i % 2 === 0) ? r : inner;
+        var px = cx + radius * Math.cos(angle);
+        var py = cy + radius * Math.sin(angle);
+        if (i === 0) oc.moveTo(px, py);
+        else         oc.lineTo(px, py);
+      }
+      oc.closePath();
+      oc.fill();
+    }
+
+    function buildFlag(W, H) {
+      var off = document.createElement('canvas');
+      off.width  = W;
+      off.height = H;
+      var oc = off.getContext('2d');
+
+      /* 13 stripes */
+      var sh = H / 13;
+      for (var i = 0; i < 13; i++) {
+        oc.fillStyle = (i % 2 === 0) ? '#BF0A30' : '#FFFFFF';
+        oc.fillRect(0, i * sh, W, sh + 0.5);
+      }
+
+      /* Blue canton (union) — right edge at ~3rd star column from right of old layout */
+      var cw = Math.floor(W * 0.276);
+      var ch = Math.ceil(sh * 7);
+      oc.fillStyle = '#002868';
+      oc.fillRect(0, 0, cw, ch);
+
+      /* 50 stars: 9 rows alternating 6 / 5 */
+      var starRows = [6, 5, 6, 5, 6, 5, 6, 5, 6];
+      var hm   = cw * 0.09;
+      var vm   = ch * 0.10;
+      var hGap = (cw - 2 * hm) / 5;
+      var vGap = (ch - 2 * vm) / 8;
+      var sr   = Math.min(hGap, vGap) * 0.55;
+
+      oc.fillStyle = '#FFFFFF';
+      for (var row = 0; row < 9; row++) {
+        var count  = starRows[row];
+        var baseX  = (row % 2 === 0) ? hm : hm + hGap * 0.5;
+        for (var col = 0; col < count; col++) {
+          drawStar(oc, baseX + col * hGap, vm + row * vGap, sr);
+        }
+      }
+      return off;
+    }
+
+    function resize() {
+      var rect = flagCanvas.parentElement.getBoundingClientRect();
+      flagCanvas.width  = rect.width  || window.innerWidth;
+      flagCanvas.height = rect.height || 90;
+      offscreen = buildFlag(flagCanvas.width, flagCanvas.height);
+    }
+
+    function animate() {
+      if (!offscreen) { requestAnimationFrame(animate); return; }
+      var W = flagCanvas.width, H = flagCanvas.height;
+      ctx.clearRect(0, 0, W, H);
+      var amp  = H * 0.042;
+      var freq = (2 * Math.PI / W) * 1.7;
+      for (var x = 0; x < W; x++) {
+        var dy = amp * Math.sin(freq * x - t);
+        ctx.drawImage(offscreen, x, 0, 1, H, x, dy, 1, H);
+      }
+      t += 0.05;
+      requestAnimationFrame(animate);
+    }
+
+    resize();
+    window.addEventListener('resize', resize);
+    requestAnimationFrame(animate);
+  })();
+  </script>
 </body>
 </html>
