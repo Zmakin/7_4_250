@@ -550,6 +550,9 @@
             <label>Speed: <span id="speed-value">1.0</span>x</label>
             <input type="range" id="speed-slider" min="0.5" max="2" step="0.1" value="1">
           </div>
+          <div class="control-group" id="term-speed-msg" style="display:none">
+            <label style="font-style:italic;opacity:0.7;font-size:0.85em">Term placed on peak frame by default, adjust accordingly</label>
+          </div>
 
           <div class="button-group">
             <button id="place-btn">Place in Preview</button>
@@ -1338,27 +1341,35 @@
         sceneFor(anim).add(pivot);   // route to bg / fireworks / fg layer
         entry = { inst, pivot, sig, type: anim.type, speed: anim.speed || 1 };
         threeActive.set(key, entry);
-        if (!isPlaced && !isLayer && isPlaying && EXPL_PARAMS[anim.type]) {
+        // audioType: term variants (america250, happy4th…) all share 'term' params
+        const audioType = anim.category === 'term' ? 'term' : anim.type;
+        const isTerm    = anim.category === 'term';
+        if (!isPlaced && (!isLayer || isTerm) && EXPL_PARAMS[audioType]) {
           const spd = anim.speed || 1;
-          // term fires at 0.93s of the animation (speed-adjusted to real time)
-          if (anim.type === 'term') {
-            setTimeout(() => { if (threeActive.has(key)) fireExplosion('term'); }, 930 / spd);
-          } else {
-            fireExplosion(anim.type);
-            // pistil = two explosions stacked 80ms apart
-            if (anim.type === 'pistil') setTimeout(() => fireExplosion('pistil'), 80 / spd);
-            // romancandle: 7 shots spread across the 1.92s animation duration
-            if (anim.type === 'romancandle') {
+          if (isTerm) {
+            // term's explosion is mid-animation — use a per-frame trigger so it fires
+            // whether the entry was created before or during active playback.
+            entry.termBoomPending = true;
+          } else if (isPlaying) {
+            fireExplosion(audioType);
+            if (audioType === 'pistil') setTimeout(() => fireExplosion('pistil'), 80 / spd);
+            if (audioType === 'romancandle') {
               for (let i = 1; i <= 6; i++) {
                 setTimeout(() => { if (threeActive.has(key)) fireExplosion('romancandle'); }, i * 320 / spd);
               }
             }
+            const crklP = CRKL_PARAMS[audioType];
+            if (crklP) setTimeout(() => _startCrackle(key, audioType), (crklP[4] || 0.25) * 1000 / spd);
           }
-          const crklP = CRKL_PARAMS[anim.type];
-          if (crklP) {
-            const startDelay = (crklP[4] || 0.25) * 1000 / spd;
-            setTimeout(() => _startCrackle(key, anim.type), startDelay);
-          }
+        }
+      }
+      // term boom: per-frame check — fires once when animation elapsed crosses 0.93s.
+      // No !isLayer guard needed; termBoomPending is only set for term category entries.
+      if (!isPlaced && isPlaying && entry.termBoomPending) {
+        const elapsedAnimSec = (currentTime - anim.startTime) / 1000 * (anim.speed || 1);
+        if (elapsedAnimSec >= 0.93) {
+          fireExplosion('term');
+          entry.termBoomPending = false;
         }
       }
       // In-plane rotation, screen-clockwise to match the 2D placement / export.
@@ -1826,9 +1837,12 @@
       if (moonProgGroup)  moonProgGroup.style.display  = showMoon;
       // Backgrounds/foregrounds/terms have no playback speed -> hide the Speed slider.
       const speedGroup = document.getElementById('speed-group');
+      const termSpeedMsg = document.getElementById('term-speed-msg');
+      const isTermSel = category === 'term' || TERMS[type];
       if (speedGroup) speedGroup.style.display =
-        (category === 'background' || category === 'foreground' || category === 'term' ||
-         BACKGROUNDS[type] || FOREGROUNDS[type] || TERMS[type]) ? 'none' : 'block';
+        (category === 'background' || category === 'foreground' || isTermSel ||
+         BACKGROUNDS[type] || FOREGROUNDS[type]) ? 'none' : 'block';
+      if (termSpeedMsg) termSpeedMsg.style.display = isTermSel ? '' : 'none';
 
       // Check if it's a background or foreground type
       if (category === 'term' || TERMS[type]) {
@@ -2180,6 +2194,9 @@
       }
       speedSlider.value = anim.speed;
       speedValue.textContent = parseFloat(anim.speed).toFixed(1);
+      const isTerm = anim.category === 'term';
+      document.getElementById('speed-group').style.display = isTerm ? 'none' : '';
+      document.getElementById('term-speed-msg').style.display = isTerm ? '' : 'none';
       updatePickerPreview();
 
       // Re-place it in the preview with all positional attributes intact.
