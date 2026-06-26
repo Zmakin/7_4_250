@@ -85,6 +85,8 @@ The Block Builder panel (top of the left column) generates complete shows from r
 | **Fees/reward ratio** | Finale intensity — higher fee pressure = bigger closing shells |
 | **Per-shell bytes** | Every individual shell's type, color, position, scale, rotation, tail, and timing |
 
+**[Open the Builder →](https://zmakin.github.io/7_4_250/)**
+
 ### Background skies
 
 Star fields and moon skies dominate (they're the most common July 4th setting). Deep Space — pure black with visible planets along the ecliptic — is the rarest option (~3% of blocks). Whether the moon appears depends on what time the block was actually mined: some blocks were mined during the day in the United States and legitimately show no moon.
@@ -116,6 +118,8 @@ This generates a single `.html` file that:
 The exported file is self-contained and ready to inscribe. Working with Ord-Drops.xyz this will be solely available to the wallet that submitted the exported file, or they may choose from a curated list st mint time.
 
 ---
+
+**[Open the Builder →](https://zmakin.github.io/7_4_250/)**
 
 ## Browser Requirements
 
