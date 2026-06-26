@@ -17,6 +17,7 @@ block-shows/data/blocks_july4.json
 Builder.html
 Builder*.bak
 Builder*.html
+index.html
 
 # Local dev / test files
 serve-local.js
