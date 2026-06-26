@@ -2927,23 +2927,24 @@
         ...effectExtras(anim)
       }));
 
-      // type -> inscription URL (CONTENT_BASE + id). Falls back to local path
-      // only if an id is missing — all ids should be filled before exporting.
+      // type -> recursive inscription URL (/content/<id>). Falls back to local
+      // path only if an id is missing — all ids should be filled before exporting.
+      // Use /content/ (not CONTENT_BASE) so the exported show resolves recursively
+      // when inscribed on ordinals; CONTENT_BASE is only for the Builder's own preview.
       const effectMap = {};
       [...new Set(animations.map(a => a.type))].forEach(t => {
         if (!THREE_EFFECTS[t]) return;
         const local = THREE_EFFECTS[t].module;
         const id = INSCRIPTION_IDS[moduleBasename(local)];
-        effectMap[t] = id ? CONTENT_BASE + id : local;
+        effectMap[t] = id ? '/content/' + id : local;
       });
 
       // three.js + bloom must be resolved by the static import map (the effect
-      // modules import the bare specifier 'three'), so bake their URLs at export
-      // time: on-chain when an id exists, else local.
+      // modules import the bare specifier 'three'), so bake their URLs at export time.
       const threeId = INSCRIPTION_IDS['three'];
       const bloomId = INSCRIPTION_IDS['three-bloom.min.js'];
-      const threeURL = threeId ? CONTENT_BASE + threeId : './lib/three.module.js';
-      const bloomURL = bloomId ? CONTENT_BASE + bloomId : './lib/three-bloom.min.js';
+      const threeURL = threeId ? '/content/' + threeId : './lib/three.module.js';
+      const bloomURL = bloomId ? '/content/' + bloomId : './lib/three-bloom.min.js';
 
       // Loop point: end 0.5s after the LAST firework (body/tail/shape) finishes
       // — background/foreground layers span the whole show and don't count —
@@ -2999,69 +3000,34 @@
     }
     const { EffectComposer, RenderPass, ShaderPass, UnrealBloomPass, FullScreenQuad } =
       await loadGzipped('${bloomURL}');
-
     const TIMELINE = ${JSON.stringify(animations)};
-    const EFFECTS  = ${JSON.stringify(effectMap)};   // type -> inscription URL
-    const SHOW_END = ${showEnd};                      // ms; the show loops at this point
-
-    // View mapping — identical to the builder's worldFromCanvas().
+    const EFFECTS  = ${JSON.stringify(effectMap)};
+    const SHOW_END = ${showEnd};
     const VIEW_SPAN = 42.9, VIEW_CENTER_Y = 12;
     function world(nx, ny) {
       return { x: (nx - 0.5) * VIEW_SPAN, y: VIEW_CENTER_Y + (0.5 - ny) * VIEW_SPAN };
     }
-
-    // Renderer / scene / bloom — identical settings to the builder preview.
     const stage = document.getElementById('stage');
     const SIZE = () => Math.max(2, Math.min(window.innerWidth, window.innerHeight));
-    // Layer-isolated render (mirrors the builder preview): backgrounds and
-    // foregrounds live in their own scenes so the fireworks' bloom + tone map
-    // never touch them. bg/fg effect modules are unchanged.
-    const scene = new THREE.Scene();     // FIREWORKS only
-    const bgScene = new THREE.Scene();   // backgrounds (own bloom, drawn first)
-    const fgScene = new THREE.Scene();   // foregrounds (alpha, drawn last/on top)
+    const scene = new THREE.Scene();
+    const bgScene = new THREE.Scene();
+    const fgScene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 400);
     camera.position.set(0, 11, 46); camera.lookAt(0, 12, 0);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setClearColor(0x000000, 1);
-    // RESOLUTION-INDEPENDENT RENDERING. The whole frame is rendered at a FIXED
-    // internal buffer (RENDER_RES) and the canvas is then CSS-stretched to fill the
-    // display. This is the ONLY way a 65" fullscreen looks IDENTICAL to the 576
-    // preview instead of turning the soft point sprites into giant blobs: every
-    // spark rasterises at the SAME pixel size everywhere, so a huge screen just
-    // shows the crisp 576 image scaled up by the GPU. 1152 = 576 × 2 (supersample
-    // baked in → pixelRatio forced to 1). Raise for more detail on huge screens,
-    // lower for a crisper/dottier look. Keep IN SYNC with the builder preview.
     const RENDER_RES = 1152;
     renderer.setPixelRatio(1);
     stage.appendChild(renderer.domElement);
-    // EffectComposer renders to an offscreen target that bypasses the renderer's
-    // own MSAA — without this the bloom output is un-antialiased and reads as
-    // blurry when scaled up to fullscreen. samples:4 restores antialiasing;
-    // HalfFloatType gives the pipeline >8-bit precision so dark gradients (e.g.
-    // the navy background) don't band as they pass through the bloom passes.
-
-    // BACKGROUND composer — own bloom (params match the builder), renders first.
     const bgRT = new THREE.WebGLRenderTarget(1, 1, { samples: 4, type: THREE.HalfFloatType });
     const bgComposer = new EffectComposer(renderer, bgRT);
     bgComposer.addPass(new RenderPass(bgScene, camera));
     bgComposer.addPass(new UnrealBloomPass(new THREE.Vector2(1, 1), 1.0, 0.3, 0.4));
-
-    // FIREWORKS composer — own bloom (turned WAY down) + the fireworks-only tone
-    // map with a hard luminance CEILING. Renders OFFSCREEN, then blitted additively
-    // over the background. The bloom resolution is pinned to FW_BLOOM_RES so the
-    // export glows the SAME as the small picker (UnrealBloom is otherwise res-
-    // dependent → brighter/fuzzier the bigger the frame). uKnee/uMax cap total
-    // stacked brightness. Keep ALL of this IN SYNC with the builder preview.
     const FW_BLOOM_RES = 384;
     const composerRT = new THREE.WebGLRenderTarget(1, 1, { samples: 4, type: THREE.HalfFloatType });
     const composer = new EffectComposer(renderer, composerRT);
     composer.renderToScreen = false;
     composer.addPass(new RenderPass(scene, camera));
-    // Soft-knee tone map, reused TWICE (keep IN SYNC with the builder preview):
-    //   PRE-bloom  (high ceiling 1.25) — tames extreme additive overlays (scaled
-    //              willow / big brocade / stacked tails / dense Term) BEFORE the
-    //              bloom so it can't spread runaway brightness into a wide haze.
-    //   POST-bloom (ceiling 0.60)      — the final fireworks brightness cap.
     const FW_TONEMAP = {
       uniforms: { tDiffuse: { value: null }, uKnee: { value: 0.30 }, uMax: { value: 0.60 } },
       vertexShader:
@@ -3081,14 +3047,12 @@
         '}'
       ].join('\\n')
     };
-    const preClamp = new ShaderPass(FW_TONEMAP);   // ShaderPass clones uniforms
+    const preClamp = new ShaderPass(FW_TONEMAP);
     preClamp.uniforms.uKnee.value = 0.80; preClamp.uniforms.uMax.value = 1.25;
     composer.addPass(preClamp);
     const bloomPass = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.25, 0.3, 0.70);
     composer.addPass(bloomPass);
     composer.addPass(new ShaderPass(FW_TONEMAP));
-
-    // Additive blit of the fireworks layer over the background (pure One,One add).
     const fwBlitQuad = new FullScreenQuad(new THREE.ShaderMaterial({
       uniforms: { tDiffuse: { value: null } },
       vertexShader:
@@ -3100,13 +3064,8 @@
       blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor,
       blendEquationAlpha: THREE.AddEquation, blendSrcAlpha: THREE.ZeroFactor, blendDstAlpha: THREE.OneFactor
     }));
-    // Pin the FIREWORKS bloom to FW_BLOOM_RES (after composer.setSize) so the glow
-    // matches the picker/preview at any export resolution instead of scaling up.
     function resize() {
       const s = SIZE();
-      // Fixed internal buffer; CSS size = the on-screen square (false = don't let
-      // setSize overwrite the CSS). The GPU upscales RENDER_RES → s for any display,
-      // so a 65" screen shows the exact 576 image scaled, not magnified blobs.
       renderer.setSize(RENDER_RES, RENDER_RES, false);
       renderer.domElement.style.width = s + 'px';
       renderer.domElement.style.height = s + 'px';
@@ -3114,16 +3073,11 @@
       bloomPass.setSize(FW_BLOOM_RES, FW_BLOOM_RES);
     }
     window.addEventListener('resize', resize); resize();
-
-    // Load every needed effect module up front (gzip-inscribed, decompress before import).
     const mods = {};
     await Promise.all(Object.entries(EFFECTS).map(async ([t, url]) => {
       try { mods[t] = await loadGzipped(url); }
       catch (err) { console.error('effect module failed to load:', t, url, err); }
     }));
-
-    // ---- Audio engine -----------------------------------------------------------
-    // [subFreq Hz, subGain, midGain, transGain, decaySec]
     const EXPL_PARAMS = {
       term:         [45,  1.00, 0.68, 0.12, 2.8],
       brocade:      [60,  0.95, 0.55, 0.20, 2.2],
@@ -3155,7 +3109,6 @@
       triangle:     [158, 0.38, 0.20, 0.08, 0.5],
       diamond:      [158, 0.38, 0.20, 0.08, 0.5],
     };
-    // [avgHz, baseGain, bandpassCenterHz, crklDurSec, startDelaySec]
     const CRKL_PARAMS = {
       brocade:      [40, 0.06, 6800, 1.90, 0.25],
       willow:       [35, 0.05, 7200, 1.70, 0.25],
@@ -3218,17 +3171,13 @@
       const spd=(active.get(key)||{}).speed||1, crklDur=CRKL_PARAMS[type][3]/spd;
       _crklEnd.set(key,Date.now()+crklDur*1000); _randomCrackle(key,type);
     }
-
-    // Active instances, keyed by timeline index — mirrors ensureThreeAnim().
     const active = new Map();
     function disposeEntry(e) {
       if (e.pivot.parent) e.pivot.parent.remove(e.pivot); else scene.remove(e.pivot);
       try { e.inst.dispose(); } catch (_) {}
     }
-    // bg -> bgScene, fg -> fgScene, everything else -> the fireworks scene.
     const sceneFor = (anim) => anim.category === 'background' ? bgScene
       : anim.category === 'foreground' ? fgScene : scene;
-
     function ensure(anim, key, t) {
       const mod = mods[anim.type];
       if (!mod || typeof mod.create !== 'function') return;
@@ -3240,7 +3189,6 @@
       let frame = startF + Math.round(elapsed * fps * (anim.speed || 1));
       let on;
       if (isLayer) {
-        // Static full-show layers stay on for their whole window (clamp frame).
         on = elapsed >= 0 && (t - anim.startTime) <= anim.duration;
         frame = Math.max(1, Math.min(total, frame));
       } else {
@@ -3259,9 +3207,8 @@
         inst.object.position.set(-w.x, -w.y, 0);
         pivot.rotation.z = -(anim.rotation || 0) * Math.PI / 180;
         pivot.add(inst.object);
-        sceneFor(anim).add(pivot);   // route to bg / fireworks / fg layer
+        sceneFor(anim).add(pivot);
         e = { inst, pivot, speed: anim.speed || 1 }; active.set(key, e);
-        // Fire audio on shell birth (skip static bg/fg layers).
         const audioType = anim.category === 'term' ? 'term' : anim.type;
         const isTerm    = anim.category === 'term';
         if (!isLayer || isTerm) {
@@ -3280,47 +3227,34 @@
           }
         }
       }
-      // Term boom fires once mid-animation (~0.93 s) rather than on birth.
       if (e.termBoomPending && (t - anim.startTime) / 1000 * (anim.speed || 1) >= 0.93) {
         fireExplosion('term'); e.termBoomPending = false;
       }
       e.inst.setFrame(frame);
     }
-
     const t0 = performance.now();
-    // Composite the layers: background (own bloom) -> fireworks (own bloom + tone
-    // map, added on top) -> foreground (alpha, occludes). IN SYNC with the builder.
     function renderLayers() {
       renderer.autoClear = true;
-      bgComposer.render();                                   // background -> screen
-      composer.render();                                    // fireworks -> offscreen RT
+      bgComposer.render();
+      composer.render();
       renderer.setRenderTarget(null);
       renderer.autoClear = false;
       fwBlitQuad.material.uniforms.tDiffuse.value = composer.readBuffer.texture;
-      fwBlitQuad.render(renderer);                          // ADD fireworks over bg
-      renderer.render(fgScene, camera);                    // foreground on top (occludes)
+      fwBlitQuad.render(renderer);
+      renderer.render(fgScene, camera);
       renderer.autoClear = true;
     }
     function loop() {
       requestAnimationFrame(loop);
       let t = performance.now() - t0;
-      if (SHOW_END > 0) t = t % SHOW_END;   // loop the whole show
+      if (SHOW_END > 0) t = t % SHOW_END;
       TIMELINE.forEach((anim, i) => ensure(anim, i, t));
       renderLayers();
     }
     loop();
   <\/script>
 </body>
-</html>
-
-<!--
-  BEFORE INSCRIBING:
-  1. Inscribe lib/three.module.js, lib/three-bloom.js and each
-     effects/*.js module used by this show.
-  2. Replace the two import-map URLs and every value in the EFFECTS map above with
-     their /content/<id> inscription URLs.
-  3. Test over http:// (ES modules don't load from file://).
--->`;
+</html>`;
     }
 
     // Every project starts with an All Black background already in the
