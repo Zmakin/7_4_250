@@ -1306,6 +1306,12 @@
     // derived from the type key (not stored per-anim) and threaded into create().
     const BG_TONE = { starsblack: 'black', starsnavy: 'navy', moonblack: 'black', moonnavy: 'navy' };
     const BG_HAS_MOON = { moonblack: true, moonnavy: true };
+    // The type of the background currently in the timeline — used to colour-match
+    // the lakeside fg's transparent holes to the active sky.
+    function activeBgType() {
+      const bgAnim = timeline.find(a => a.category === 'background');
+      return bgAnim ? bgAnim.type : 'allblack';
+    }
     // Build the extra create()-opts a type needs beyond color/x/y/scale/shape:
     // background tone + moon params + compass facing, or the term text. Used by
     // the live preview, the picker, AND serialized into the export (JSON-safe).
@@ -1321,6 +1327,7 @@
       if (anim.facing != null) o.facing = anim.facing;
       if (anim.seed   != null) o.seed   = anim.seed;
       if (TERMS[anim.type]) o.term = anim.term || TERMS[anim.type].text || '';
+      if (anim.category === 'foreground') o.bgType = activeBgType();
       return o;
     }
     // ---- On-chain inscription IDs for EXPORT -------------------------------
@@ -1332,23 +1339,45 @@
     // polygon shape uses shape.js). The export turns a non-blank id into a full
     // CONTENT_BASE + id URL (see generateInscription).
     const INSCRIPTION_IDS = {
-      'three':              '0d013bb60fc5bf5a6c77da7371b07dc162ebc7d7f3af0ff3bd00ae5f0c546445i0', // three.js r0.163
-      'three-bloom.min.js': '6fe83473b2a59001f3672c47ed2bb1358a310e2b9a9494d8a8332baa7bb6c693i0', // bloom bundle
-      // effects/*.js — paste each id as you inscribe it:
-      'peony.js': '', 'willow.js': '', 'waterfall.js': '', 'chrysanthemum.js': '',
-      'dahlia.js': '', 'pistil.js': '', 'strobe.js': '', 'dragoneggs.js': '',
-      'spider.js': '', 'fish.js': '', 'palm.js': '',
+      'three':              '0d013bb60fc5bf5a6c77da7371b07dc162ebc7d7f3af0ff3bd00ae5f0c546445i0',
+      'three-bloom.min.js': '6fe83473b2a59001f3672c47ed2bb1358a310e2b9a9494d8a8332baa7bb6c693i0',
+      // bodies:
+      'peony.js':           '2c13cd64ce86cafcfff883190de7bf5a1b91551517c20dbc307865095904c1abi0',
+      'pistil.js':          '2c13cd64ce86cafcfff883190de7bf5a1b91551517c20dbc307865095904c1abi1',
+      'romancandle.js':     '2c13cd64ce86cafcfff883190de7bf5a1b91551517c20dbc307865095904c1abi2',
+      'shape.js':           '2c13cd64ce86cafcfff883190de7bf5a1b91551517c20dbc307865095904c1abi3',
+      'spider.js':          '2c13cd64ce86cafcfff883190de7bf5a1b91551517c20dbc307865095904c1abi4',
+      'strobe.js':          '2c13cd64ce86cafcfff883190de7bf5a1b91551517c20dbc307865095904c1abi5',
+      'tourbillion.js':     '2c13cd64ce86cafcfff883190de7bf5a1b91551517c20dbc307865095904c1abi7',
+      'waterfall.js':       '2c13cd64ce86cafcfff883190de7bf5a1b91551517c20dbc307865095904c1abi8',
+      'chrysanthemum.js':   '2c13cd64ce86cafcfff883190de7bf5a1b91551517c20dbc307865095904c1abi9',
+      'dahlia.js':          '2c13cd64ce86cafcfff883190de7bf5a1b91551517c20dbc307865095904c1abi10',
+      'crossette.js':       '2c13cd64ce86cafcfff883190de7bf5a1b91551517c20dbc307865095904c1abi11',
+      'cracklingrain.js':   '2c13cd64ce86cafcfff883190de7bf5a1b91551517c20dbc307865095904c1abi12',
+      'willow.js':          '2c13cd64ce86cafcfff883190de7bf5a1b91551517c20dbc307865095904c1abi13',
+      'dragoneggs.js':      '2c13cd64ce86cafcfff883190de7bf5a1b91551517c20dbc307865095904c1abi14',
+      'fallingleaves.js':   '2c13cd64ce86cafcfff883190de7bf5a1b91551517c20dbc307865095904c1abi15',
+      'palm.js':            '2c13cd64ce86cafcfff883190de7bf5a1b91551517c20dbc307865095904c1abi16',
+      'fish.js':            '2c13cd64ce86cafcfff883190de7bf5a1b91551517c20dbc307865095904c1abi17',
+      'pearls.js':          '2c13cd64ce86cafcfff883190de7bf5a1b91551517c20dbc307865095904c1abi18',
       'brocade.js':         '6fe83473b2a59001f3672c47ed2bb1358a310e2b9a9494d8a8332baa7bb6c693i4',
-      'fallingleaves.js': '', 'cracklingrain.js': '', 'crossette.js': '',
-      'tourbillion.js': '', 'romancandle.js': '', 'risingtail.js': '',
+      // tails:
+      'risingtail.js':      'edb3132c0120ef0da52c403100fc79cc61de062c9ed46a2a8cedf9b935053b70i1',
       'comet.js':           '6fe83473b2a59001f3672c47ed2bb1358a310e2b9a9494d8a8332baa7bb6c693i1',
-      'palmfrond.js': '', 'pearls.js': '', 'shape.js': '',
-      'bg_allblack.js': '',
+      'palmfrond.js':       'edb3132c0120ef0da52c403100fc79cc61de062c9ed46a2a8cedf9b935053b70i0',
+      // backgrounds:
+      'bg_space.js':        '64a2f27ff72dccfbe262c9bd3d6ab9fa25aeb9483de47f8e2195305318b1b2c0i0',
+      'bg_starfield.js':    '64a2f27ff72dccfbe262c9bd3d6ab9fa25aeb9483de47f8e2195305318b1b2c0i1',
+      'bg_allblack.js':     '64a2f27ff72dccfbe262c9bd3d6ab9fa25aeb9483de47f8e2195305318b1b2c0i2',
       'bg_navygradient.js': '6fe83473b2a59001f3672c47ed2bb1358a310e2b9a9494d8a8332baa7bb6c693i3',
-      'fg_blackoverlay.js': '',
-      'bg_starfield.js': '', 'bg_space.js': '', 'term.js': '',
+      // foregrounds:
+      'fg_blackoverlay.js': '9b08107f248e18a6b79e1635fd5f615f0d3e79c8dc623ee44a269eac4d2ca09fi0',
+      'fg_lakeside.js':     '9b08107f248e18a6b79e1635fd5f615f0d3e79c8dc623ee44a269eac4d2ca09fi1',
+      'fg_park.js':         '9b08107f248e18a6b79e1635fd5f615f0d3e79c8dc623ee44a269eac4d2ca09fi2',
+      'fg_football.js':     '9b08107f248e18a6b79e1635fd5f615f0d3e79c8dc623ee44a269eac4d2ca09fi3',
       'fg_baseball.js':     '6fe83473b2a59001f3672c47ed2bb1358a310e2b9a9494d8a8332baa7bb6c693i2',
-      'fg_lakeside.js': '', 'fg_football.js': '', 'fg_park.js': ''
+      // term:
+      'term.js':            '2c13cd64ce86cafcfff883190de7bf5a1b91551517c20dbc307865095904c1abi6',
     };
     // Off-chain base so the exported file can pull inscribed content while you
     // test locally. For the FINAL recursive inscription of the exported show,
@@ -1372,6 +1401,20 @@
     // Lazy-load + cache effect modules. Returns the module synchronously once
     // ready, or null while still loading (the next frame picks it up). Each
     // type is fetched at most once.
+    async function loadGzipped(url) {
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error('fetch ' + resp.status + ' ' + url);
+      const raw = await resp.arrayBuffer();
+      const ds  = new DecompressionStream('gzip');
+      const w   = ds.writable.getWriter();
+      w.write(new Uint8Array(raw)); w.close();
+      const text = new TextDecoder().decode(await new Response(ds.readable).arrayBuffer());
+      const burl = URL.createObjectURL(new Blob([text], { type: 'text/javascript' }));
+      const mod  = await import(burl);
+      URL.revokeObjectURL(burl);
+      return mod;
+    }
+
     const _fxMod = new Map();        // type -> loaded module
     const _fxLoading = new Set();
     function effectModule(type) {
@@ -1381,13 +1424,12 @@
         _fxLoading.add(type);
         const basename = moduleBasename(def.module);
         const inscriptionId = INSCRIPTION_IDS[basename];
-        const url = inscriptionId
-          ? CONTENT_BASE + inscriptionId
-          : def.module + '?v=' + FX_CACHE_BUST;
-        import(url)
-          .then(m => _fxMod.set(type, m))
-          .catch(e => console.error('Three effect failed to load:', type, e))
-          .finally(() => _fxLoading.delete(type));
+        const p = inscriptionId
+          ? loadGzipped(CONTENT_BASE + inscriptionId)
+          : import(def.module + '?v=' + FX_CACHE_BUST);
+        p.then(m => _fxMod.set(type, m))
+         .catch(e => console.error('Three effect failed to load:', type, e))
+         .finally(() => _fxLoading.delete(type));
       }
       return null;
     }
@@ -1468,8 +1510,12 @@
       // NOTE: moonPhase/moonProg are deliberately NOT in the signature — they're
       // applied LIVE via inst.setSky() (no rebuild) so dragging the moon sliders
       // stays smooth instead of disposing/recreating the sky every tick.
-      return [anim.type, anim.color, anim.x, anim.y, anim.scale, anim.startTime, anim.duration,
+      const base = [anim.type, anim.color, anim.x, anim.y, anim.scale, anim.startTime, anim.duration,
         anim.term, anim.moonVisible, anim.facing].join('|');
+      // Foregrounds bake in the active bg colour; include it in the sig so a bg
+      // swap triggers a rebuild with the new gradient.
+      if (anim.category === 'foreground') return base + '|bg:' + activeBgType();
+      return base;
     }
     // Pick the layer scene for an effect: backgrounds -> bgScene, foregrounds ->
     // fgScene, everything else (body/tail/shape/term) -> the fireworks scene.
@@ -2881,14 +2927,14 @@
         ...effectExtras(anim)
       }));
 
-      // type -> { local, id }. The exported runtime resolves each to its on-chain
-      // URL when ONCHAIN is true and an id is filled in, otherwise the local
-      // ./effects path — so any mix of inscribed + local effects works.
+      // type -> inscription URL (CONTENT_BASE + id). Falls back to local path
+      // only if an id is missing — all ids should be filled before exporting.
       const effectMap = {};
       [...new Set(animations.map(a => a.type))].forEach(t => {
         if (!THREE_EFFECTS[t]) return;
         const local = THREE_EFFECTS[t].module;
-        effectMap[t] = { local, id: INSCRIPTION_IDS[moduleBasename(local)] || '' };
+        const id = INSCRIPTION_IDS[moduleBasename(local)];
+        effectMap[t] = id ? CONTENT_BASE + id : local;
       });
 
       // three.js + bloom must be resolved by the static import map (the effect
@@ -2929,30 +2975,34 @@
   <script type="importmap">
   {
     "imports": {
-      "three": "${threeURL}",
-      "three-bloom": "${bloomURL}"
+      "three": "${threeURL}"
     }
   }
   <\/script>
-  <!-- Local-only libs (for fully offline testing) — swap with the import map above:
-  { "imports": { "three": "./lib/three.module.js", "three-bloom": "./lib/three-bloom.js" } } -->
 </head>
 <body>
   <div id="stage"></div>
   <script type="module">
     import * as THREE from 'three';
-    import { EffectComposer, RenderPass, ShaderPass, UnrealBloomPass, FullScreenQuad } from 'three-bloom';
+    async function loadGzipped(url) {
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error('fetch ' + resp.status + ' ' + url);
+      const raw = await resp.arrayBuffer();
+      const ds  = new DecompressionStream('gzip');
+      const w   = ds.writable.getWriter();
+      w.write(new Uint8Array(raw)); w.close();
+      const text = new TextDecoder().decode(await new Response(ds.readable).arrayBuffer());
+      const burl = URL.createObjectURL(new Blob([text], { type: 'text/javascript' }));
+      const mod  = await import(burl);
+      URL.revokeObjectURL(burl);
+      return mod;
+    }
+    const { EffectComposer, RenderPass, ShaderPass, UnrealBloomPass, FullScreenQuad } =
+      await loadGzipped('${bloomURL}');
 
     const TIMELINE = ${JSON.stringify(animations)};
-    const EFFECTS  = ${JSON.stringify(effectMap)};   // type -> { local, id }
+    const EFFECTS  = ${JSON.stringify(effectMap)};   // type -> inscription URL
     const SHOW_END = ${showEnd};                      // ms; the show loops at this point
-
-    // ONCHAIN governs the EFFECT modules below: true = use the on-chain copy of
-    // any effect that has an id (the rest stay local); false = force all local.
-    // three.js + bloom are fixed by the import map above (re-export to change).
-    const ONCHAIN = true;
-    const CONTENT = '${CONTENT_BASE}';   // for the final recursive inscription use '/content/'
-    const effURL = e => (ONCHAIN && e.id) ? CONTENT + e.id : e.local;
 
     // View mapping — identical to the builder's worldFromCanvas().
     const VIEW_SPAN = 42.9, VIEW_CENTER_Y = 12;
@@ -3065,11 +3115,10 @@
     }
     window.addEventListener('resize', resize); resize();
 
-    // Load every needed effect module up front (on-chain or local per effURL).
+    // Load every needed effect module up front (gzip-inscribed, decompress before import).
     const mods = {};
-    await Promise.all(Object.entries(EFFECTS).map(async ([t, e]) => {
-      const url = effURL(e);
-      try { mods[t] = await import(url); }
+    await Promise.all(Object.entries(EFFECTS).map(async ([t, url]) => {
+      try { mods[t] = await loadGzipped(url); }
       catch (err) { console.error('effect module failed to load:', t, url, err); }
     }));
 
