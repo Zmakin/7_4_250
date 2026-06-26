@@ -1,0 +1,42 @@
+# Collated exports pulled from Supabase — local only, never publish
+collated/
+
+# Secrets — never commit your Supabase service_role / secret key
+.env
+*.secret
+*service_key*
+
+# Block shows: the Builder/GitHub gets ONLY block-shows/7_4_250_blocks.json.
+# Everything under out/ carries the curated 250 — keep it private/local.
+block-shows/out/
+# The full July-4 dataset includes the curated blocks' raw data; not needed by
+# the hosted Builder (it loads 7_4_250_blocks.json only).
+block-shows/data/blocks_july4.json
+
+# Builder source — pushed to GitHub as index.html manually
+Builder.html
+Builder*.bak
+Builder*.html
+
+# Local dev / test files
+serve-local.js
+test.html
+TestInscription.html
+
+# Exported inscription HTMLs (local output, not source)
+btc_*.html
+untitled_fireworks_inscription*.html
+
+# Local compressed build artifacts (inscription-ready but not source)
+lib/three-bloom.min.js.gz
+
+# Visual Studio / editor artifacts
+.vs/
+
+# Misc local docs
+PROJECT_SUMMARY.md
+PROJECT_COMPLETE.txt
+QUICK_REFERENCE.md
+GETTING_STARTED.md
+INSCRIPTION_GUIDE.md
+INSCRIPTION_CHECKLIST.md

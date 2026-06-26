@@ -151,10 +151,22 @@ function bitcoinPoints() {
         // (where the right neighbour is also empty) so the loops taper diagonally to a vertex.
         if (solidB(x + S, y) && !solidB(x, y + S) && y > -30 && y < 0) continue; // upper flat bottom
         if (solidB(x + S, y) && !solidB(x, y - S) && y <  30 && y > 0) continue; // lower flat top
+        // Remove natural dots that are being repositioned explicitly below.
+        if ((y === -4 || y === 4)   && x === 16) continue; // y=±4 tip pair  → moved to x=32
+        if ((y === -12 || y === 12) && x === 40) continue; // y=±12 corners   → moved to x=56
         pts.push({ x: x + CX, y: y });
       }
     }
   }
+  // Convergence arc — explicit placements for the waist vertex and surrounding pairs.
+  // Arc from vertex outward: vertex(x=24,y=0) → 2nd(x=32,y=±4) → 3rd(x=40,y=±8) → 4th(x=56,y=±12)
+  pts.push({ x: 16 + CX, y:   0 }); // vertex — single dot (output x=24)
+  pts.push({ x: 24 + CX, y:  -4 }); // 2nd pair top    (output x=32)
+  pts.push({ x: 24 + CX, y:   4 }); // 2nd pair bottom (output x=32)
+  pts.push({ x: 32 + CX, y:  -8 }); // 3rd pair top    (output x=40, off-grid row)
+  pts.push({ x: 32 + CX, y:   8 }); // 3rd pair bottom (output x=40, off-grid row)
+  pts.push({ x: 48 + CX, y: -12 }); // 4th pair top    (output x=56)
+  pts.push({ x: 48 + CX, y:  12 }); // 4th pair bottom (output x=56)
   return pts;
 }
 
