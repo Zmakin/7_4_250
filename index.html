@@ -6,7 +6,7 @@
   <title>America 250 — Fireworks Builder</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Pinyon+Script&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -61,20 +61,25 @@
     }
 
     h1 {
-      font-family: 'Bebas Neue', Impact, 'Arial Narrow', sans-serif;
-      font-size: 36px;
+      font-family: 'Pinyon Script', cursive;
+      font-size: 31px;
       font-weight: 400;
-      letter-spacing: 5px;
+      letter-spacing: 2px;
       color: #fff;
-      text-shadow: 0 0 14px rgba(0,0,0,1), 0 2px 8px rgba(0,0,0,1);
+      text-shadow:
+        -0.5px -0.5px 0 rgba(0,0,0,0.9), 0.5px -0.5px 0 rgba(0,0,0,0.9),
+        -0.5px  0.5px 0 rgba(0,0,0,0.9), 0.5px  0.5px 0 rgba(0,0,0,0.9);
       line-height: 1;
     }
 
     #header-sub {
-      font-size: 15px;
+      font-family: 'Pinyon Script', cursive;
+      font-size: 22px;
       color: #eef3ff;
-      text-shadow: 0 1px 6px rgba(0,0,0,1);
-      letter-spacing: 0.2px;
+      text-shadow:
+        -0.5px -0.5px 0 rgba(0,0,0,0.9), 0.5px -0.5px 0 rgba(0,0,0,0.9),
+        -0.5px  0.5px 0 rgba(0,0,0,0.9), 0.5px  0.5px 0 rgba(0,0,0,0.9);
+      letter-spacing: 0.5px;
     }
 
     .logo-o {
@@ -3068,6 +3073,103 @@
       catch (err) { console.error('effect module failed to load:', t, url, err); }
     }));
 
+    // ---- Audio engine -----------------------------------------------------------
+    // [subFreq Hz, subGain, midGain, transGain, decaySec]
+    const EXPL_PARAMS = {
+      term:         [45,  1.00, 0.68, 0.12, 2.8],
+      brocade:      [60,  0.95, 0.55, 0.20, 2.2],
+      willow:       [65,  0.88, 0.50, 0.18, 2.0],
+      palm:         [68,  0.85, 0.50, 0.17, 1.8],
+      palmfrond:    [72,  0.80, 0.46, 0.16, 1.7],
+      waterfall:    [70,  0.80, 0.46, 0.16, 1.6],
+      chrysanthemum:[78,  0.75, 0.44, 0.16, 1.5],
+      dahlia:       [82,  0.72, 0.42, 0.15, 1.4],
+      pistil:       [88,  0.68, 0.38, 0.14, 1.3],
+      peony:        [90,  0.70, 0.40, 0.14, 1.3],
+      fish:         [95,  0.65, 0.37, 0.13, 1.1],
+      spider:       [96,  0.65, 0.37, 0.13, 1.1],
+      fallingleaves:[98,  0.65, 0.36, 0.13, 1.0],
+      dragoneggs:   [105, 0.60, 0.34, 0.12, 1.0],
+      cracklingrain:[108, 0.60, 0.34, 0.12, 1.0],
+      crossette:    [110, 0.55, 0.32, 0.12, 0.9],
+      strobe:       [125, 0.50, 0.29, 0.11, 0.8],
+      tourbillion:  [128, 0.50, 0.28, 0.11, 0.8],
+      romancandle:  [165, 0.08, 0.05, 0.02, 0.25],
+      comet:        [138, 0.45, 0.25, 0.10, 0.7],
+      risingtail:   [142, 0.42, 0.24, 0.09, 0.6],
+      circle:       [150, 0.40, 0.22, 0.09, 0.6],
+      star:         [150, 0.40, 0.22, 0.09, 0.6],
+      heart:        [150, 0.40, 0.22, 0.09, 0.6],
+      rocket:       [145, 0.42, 0.24, 0.10, 0.6],
+      bitcoin:      [150, 0.40, 0.22, 0.09, 0.6],
+      square:       [158, 0.38, 0.20, 0.08, 0.5],
+      triangle:     [158, 0.38, 0.20, 0.08, 0.5],
+      diamond:      [158, 0.38, 0.20, 0.08, 0.5],
+    };
+    // [avgHz, baseGain, bandpassCenterHz, crklDurSec, startDelaySec]
+    const CRKL_PARAMS = {
+      brocade:      [40, 0.06, 6800, 1.90, 0.25],
+      willow:       [35, 0.05, 7200, 1.70, 0.25],
+      palm:         [38, 0.04, 4200, 1.00, 0.25],
+      palmfrond:    [36, 0.05, 5800, 1.30, 0.25],
+      waterfall:    [45, 0.08, 5000, 1.60, 0.25],
+      cracklingrain:[42, 0.05, 6500, 1.00, 0.25],
+      dragoneggs:   [50, 0.06, 6500, 0.08, 0.50],
+      crossette:    [33, 0.05, 6800, 0.50, 0.70],
+      risingtail:   [36, 0.04, 7200, 0.30, 0.25],
+      comet:        [36, 0.04, 7000, 0.35, 0.25],
+    };
+    let audioCtx = null, audioReady = false;
+    const _crklTimers = new Map(), _crklEnd = new Map();
+    function initAudio() {
+      if (audioReady) return;
+      try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); audioReady = true; }
+      catch (e) {}
+    }
+    ['click','keydown','touchstart'].forEach(ev => document.addEventListener(ev, initAudio, {once:true}));
+    function _noiseLayer(durSec, filterType, freq, gainPk, decay, q) {
+      const sr=audioCtx.sampleRate, buf=audioCtx.createBuffer(1,Math.ceil(sr*durSec),sr);
+      const d=buf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+      const src=audioCtx.createBufferSource(); src.buffer=buf;
+      const flt=audioCtx.createBiquadFilter(); flt.type=filterType; flt.frequency.value=freq;
+      if(q!==undefined) flt.Q.value=q;
+      const gain=audioCtx.createGain(), t=audioCtx.currentTime;
+      gain.gain.setValueAtTime(gainPk,t); gain.gain.exponentialRampToValueAtTime(0.0001,t+decay);
+      src.connect(flt); flt.connect(gain); gain.connect(audioCtx.destination);
+      src.start(t); src.stop(t+durSec);
+    }
+    function fireExplosion(type) {
+      if(!audioReady) return; const p=EXPL_PARAMS[type]; if(!p) return;
+      const [subF,subG,midG,transG,decay]=p, t=audioCtx.currentTime;
+      const osc=audioCtx.createOscillator(); osc.type='sine';
+      osc.frequency.setValueAtTime(subF*1.5,t); osc.frequency.exponentialRampToValueAtTime(subF*0.35,t+0.13);
+      const og=audioCtx.createGain(); og.gain.setValueAtTime(subG,t); og.gain.exponentialRampToValueAtTime(0.0001,t+decay*0.5);
+      osc.connect(og); og.connect(audioCtx.destination); osc.start(t); osc.stop(t+decay*0.5);
+      _noiseLayer(decay+0.2,'lowpass',subF*2.0,subG*0.45,decay);
+      _noiseLayer(decay*0.5,'bandpass',800,midG,decay*0.4,1.2);
+      _noiseLayer(0.06,'highpass',2200,transG*0.5,0.05);
+    }
+    function _randomCrackle(key,type) {
+      const now=Date.now(), end=_crklEnd.get(key)||0;
+      if(!audioReady||!active.has(key)||now>=end){_crklTimers.delete(key);_crklEnd.delete(key);return;}
+      const [hz,gain,bpHz,crklDur]=CRKL_PARAMS[type];
+      const fade=Math.max(0,(end-now)/(crklDur*1000)), sr=audioCtx.sampleRate, dur=0.022;
+      const buf=audioCtx.createBuffer(1,Math.ceil(sr*dur),sr), d=buf.getChannelData(0), decayK=sr*0.003;
+      for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.exp(-i/decayK);
+      const src=audioCtx.createBufferSource(); src.buffer=buf;
+      const flt=audioCtx.createBiquadFilter(); flt.type='bandpass'; flt.frequency.value=bpHz; flt.Q.value=2.0;
+      const gn=audioCtx.createGain(); gn.gain.value=gain*fade*(0.35+Math.random()*1.3);
+      src.connect(flt); flt.connect(gn); gn.connect(audioCtx.destination);
+      src.start(audioCtx.currentTime); src.stop(audioCtx.currentTime+dur);
+      _crklTimers.set(key,setTimeout(()=>_randomCrackle(key,type),Math.max(5,(1000/hz)*(0.5+Math.random()))));
+    }
+    function _startCrackle(key,type) {
+      if(!audioReady||!CRKL_PARAMS[type]) return;
+      if(_crklTimers.has(key)) clearTimeout(_crklTimers.get(key));
+      const spd=(active.get(key)||{}).speed||1, crklDur=CRKL_PARAMS[type][3]/spd;
+      _crklEnd.set(key,Date.now()+crklDur*1000); _randomCrackle(key,type);
+    }
+
     // Active instances, keyed by timeline index — mirrors ensureThreeAnim().
     const active = new Map();
     function disposeEntry(e) {
@@ -3109,7 +3211,29 @@
         pivot.rotation.z = -(anim.rotation || 0) * Math.PI / 180;
         pivot.add(inst.object);
         sceneFor(anim).add(pivot);   // route to bg / fireworks / fg layer
-        e = { inst, pivot }; active.set(key, e);
+        e = { inst, pivot, speed: anim.speed || 1 }; active.set(key, e);
+        // Fire audio on shell birth (skip static bg/fg layers).
+        const audioType = anim.category === 'term' ? 'term' : anim.type;
+        const isTerm    = anim.category === 'term';
+        if (!isLayer || isTerm) {
+          if (isTerm) {
+            e.termBoomPending = true;
+          } else if (EXPL_PARAMS[audioType]) {
+            const spd = anim.speed || 1;
+            fireExplosion(audioType);
+            if (audioType === 'pistil') setTimeout(() => fireExplosion('pistil'), 80 / spd);
+            if (audioType === 'romancandle') {
+              for (let i = 1; i <= 6; i++)
+                setTimeout(() => { if (active.has(key)) fireExplosion('romancandle'); }, i * 320 / spd);
+            }
+            const crklP = CRKL_PARAMS[audioType];
+            if (crklP) setTimeout(() => _startCrackle(key, audioType), (crklP[4] || 0.25) * 1000 / spd);
+          }
+        }
+      }
+      // Term boom fires once mid-animation (~0.93 s) rather than on birth.
+      if (e.termBoomPending && (t - anim.startTime) / 1000 * (anim.speed || 1) >= 0.93) {
+        fireExplosion('term'); e.termBoomPending = false;
       }
       e.inst.setFrame(frame);
     }
