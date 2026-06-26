@@ -46,13 +46,13 @@ Use the dropdowns on the right side to pick what to place next:
 After selecting a category the panel shows controls for that effect:
 
 - **Color** — the burst color (or two colors for effects like Pistil)
-- **Speed** — how fast the animation plays (0.6× slow-motion to 1.4× fast)
+- **Speed** — how fast the animation plays (0.5× slow-motion to 2× fast)
 - **Scale** — how large the burst is
 - **Rotation** — spin the burst or tilt the tail's launch angle
 
 ### The Preview Window
 
-The small square in the upper-right corner of the stage is the **global preview** — it plays the full show from the beginning, looping. Use it to judge the whole composition while you work.
+The square on the right side of the stage is the **global preview** — it plays the full show from the beginning, looping. Use it to judge the whole composition while you work.
 
 - **Spacebar** — freeze the global preview at the current frame
 - The three freeze-point buttons below the preview step through the key moments of the selected effect (start, peak, end)
@@ -66,7 +66,7 @@ The Block Builder panel (top of the left column) generates complete shows from r
 ### How to use it
 
 1. Click **Generate** to load the current block's show into the timeline
-2. Use **◀ ▶** to step through the scored list of 2,268 July 4th blocks (best first)
+2. Use **◀ ▶** to step through the time ascending list of 2,268 July 4th blocks starting in 2009
 3. Click **🎲** to jump to a random block
 4. Type a block height directly into the height box and press Enter
 5. Hit **▶ Play** on the timeline to watch the show
@@ -87,17 +87,17 @@ The Block Builder panel (top of the left column) generates complete shows from r
 
 ### Background skies
 
-Star fields and moon skies dominate (they're the most common July 4th setting). Deep Space — pure black with visible planets along the ecliptic — is the rarest option (~3% of blocks). Whether the moon appears depends on what time the block was actually mined: some blocks were mined during the day and legitimately show no moon.
+Star fields and moon skies dominate (they're the most common July 4th setting). Deep Space — pure black with visible planets along the ecliptic — is the rarest option (~3% of blocks). Whether the moon appears depends on what time the block was actually mined: some blocks were mined during the day in the United States and legitimately show no moon.
 
 ### Foreground scenes
 
 The foreground is drawn from the merkle root, so any block in any year can get any scene:
 
 - **Baseball field** — hometown ballpark with backstop, light pole, and chainlink
-- **Lakeside** — dock, Adirondack chairs, calm water reflections
+- **Lakeside** — dock, Adirondack chairs, calm water
 - **Football stadium** — bleachers and goalposts
 - **Park** — crowd silhouettes with trees and benches
-- **Black overlay** — minimal dark ground band
+- **Black overlay** — minimal grassy band
 - Some blocks get no foreground at all
 
 ---
@@ -110,9 +110,10 @@ This generates a single `.html` file that:
 - Loads Three.js, the bloom renderer, and every effect module directly from their Bitcoin inscription IDs
 - Has no dependency on this builder, GitHub, or any server
 - Loops forever, runs entirely on-chain when itself inscribed on Bitcoin
-- Works standalone in any modern browser for previewing before inscription
+- Is safely sent my a backende server with per wallet address determinism and recollection
+- You can Save up to 3 shows to work on at any time but Export only 1 timeline for final inscription
 
-The exported file is self-contained and ready to inscribe. Change the `CONTENT_BASE` constant inside from `https://ordinals.com/content/` to `/content/` before final inscription so it uses recursive on-chain loading.
+The exported file is self-contained and ready to inscribe. Working with Ord-Drops.xyz this will be solely available to the wallet that submitted the exported file, or they may choose from a curated list st mint time.
 
 ---
 
