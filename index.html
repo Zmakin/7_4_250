@@ -365,6 +365,15 @@
       aspect-ratio: 1 / 1;
     }
 
+    #handle-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 3;
+      pointer-events: none;
+    }
+
     #preview-canvas {
       width: 100%;
       height: 100%;
@@ -574,6 +583,7 @@
         <div id="preview-section">
           <div id="preview-container">
             <canvas id="preview-canvas"></canvas>
+            <canvas id="handle-canvas"></canvas>
             <div id="frame-toast"></div>
           </div>
 
@@ -595,17 +605,15 @@
 
          DEV (localhost): the two aliases below point at local copies in ./lib/.
          INSCRIPTION: swap each target for its recursive /content/<id> URL:
-           three        -> /content/0d013bb60fc5bf5a6c77da7371b07dc162ebc7d7f3af0ff3bd00ae5f0c546445i0   (Wizards of Ord, three.js 0.163 — COMPLETE build; the r178 inscription a4a6… is tree-shaken and lacks Points/PointsMaterial/CanvasTexture/Clock, so it cannot run particle shells)
-           three-bloom  -> /content/<YOUR_BLOOM_BUNDLE_INSCRIPTION_ID>                                   (lib/three-postprocessing-bundle.js, ~5 KB brotli — built from 0.163 jsm to match the core; inscribe once, reuse forever)
-         The bloom add-ons (EffectComposer/UnrealBloomPass/shaders) are NOT
-         inscribed by anyone yet, so we ship our own bundle. -->
+           three       -> /content/0d013bb60fc5bf5a6c77da7371b07dc162ebc7d7f3af0ff3bd00ae5f0c546445i0  (Wizards of Ord, three.js 0.163 — COMPLETE build; the r178 inscription a4a6… is tree-shaken and lacks Points/PointsMaterial/CanvasTexture/Clock)
+           three-bloom -> /content/<YOUR_BLOOM_BUNDLE_INSCRIPTION_ID>                                  (lib/three-bloom.js — inscribe once, paste id into INSCRIPTION_IDS below) -->
     <!-- Supabase client — wallet-gated cloud save/import/export (see supabase_setup.sql) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="importmap">
     {
       "imports": {
-        "three": "./lib/three.module.js",
-        "three-bloom": "./lib/three-postprocessing-bundle.js"
+        "three":       "./lib/three.module.js",
+        "three-bloom": "./lib/three-bloom.min.js"
       }
     }
     </script>
@@ -835,6 +843,8 @@
     console.log('animationType:', animationType);
 
     const previewCtx = previewCanvas.getContext('2d', { willReadFrequently: true });
+    const handleCanvas = document.getElementById('handle-canvas');
+    const handleCtx = handleCanvas.getContext('2d');
 
     // ==================== THREE.JS PREVIEW (r178 + UnrealBloom) ====================
     // THREE, EffectComposer, RenderPass, UnrealBloomPass are put on window by the
@@ -1112,7 +1122,7 @@
     // CONTENT_BASE + id URL (see generateInscription).
     const INSCRIPTION_IDS = {
       'three':                          '0d013bb60fc5bf5a6c77da7371b07dc162ebc7d7f3af0ff3bd00ae5f0c546445i0', // three.js r0.163 (already on-chain)
-      'three-postprocessing-bundle.js': '',   // bloom add-on — inscribe lib/three-postprocessing-bundle.js, paste id
+      'three-bloom.js': '',   // bloom add-on — inscribe lib/three-bloom.js, paste id here
       // effects/*.js — paste each id as you inscribe it:
       'peony.js': '', 'willow.js': '', 'waterfall.js': '', 'chrysanthemum.js': '',
       'dahlia.js': '', 'pistil.js': '', 'strobe.js': '', 'dragoneggs.js': '',
@@ -1273,11 +1283,6 @@
       if (isPlaced) {
         // Being positioned: show the freeze-selected key frame (spacebar cycles).
         frame = freezeFrame(anim.type, anim.freeze);
-        // The TERM's rise begins off-screen (its 'first' frame is a blank canvas), so
-        // DISPLAY it at its visible peak in the global preview while positioning. This
-        // changes only what's shown — the saved freeze/startFrame and the runtime
-        // full-sequence playback (from frame 1) are untouched.
-        if (anim.category === 'term') frame = freezeFrame(anim.type, 'largest');
         active = true;
       } else {
         // Accepted: begin at startF and play forward; inactive before its start.
@@ -1331,8 +1336,30 @@
         inst.object.position.set(-pp.x, -pp.y, 0);
         pivot.add(inst.object);
         sceneFor(anim).add(pivot);   // route to bg / fireworks / fg layer
-        entry = { inst, pivot, sig };
+        entry = { inst, pivot, sig, type: anim.type, speed: anim.speed || 1 };
         threeActive.set(key, entry);
+        if (!isPlaced && !isLayer && EXPL_PARAMS[anim.type]) {
+          const spd = anim.speed || 1;
+          // term fires at 0.93s of the animation (speed-adjusted to real time)
+          if (anim.type === 'term') {
+            setTimeout(() => { if (threeActive.has(key)) fireExplosion('term'); }, 930 / spd);
+          } else {
+            fireExplosion(anim.type);
+            // pistil = two explosions stacked 80ms apart
+            if (anim.type === 'pistil') setTimeout(() => fireExplosion('pistil'), 80 / spd);
+            // romancandle: 7 shots spread across the 1.92s animation duration
+            if (anim.type === 'romancandle') {
+              for (let i = 1; i <= 6; i++) {
+                setTimeout(() => { if (threeActive.has(key)) fireExplosion('romancandle'); }, i * 320 / spd);
+              }
+            }
+          }
+          const crklP = CRKL_PARAMS[anim.type];
+          if (crklP) {
+            const startDelay = (crklP[4] || 0.25) * 1000 / spd;
+            setTimeout(() => _startCrackle(key, anim.type), startDelay);
+          }
+        }
       }
       // In-plane rotation, screen-clockwise to match the 2D placement / export.
       entry.pivot.rotation.z = -(anim.rotation || 0) * Math.PI / 180;
@@ -1446,6 +1473,170 @@
       renderLayers();
     }
 
+    // ==================== AUDIO (native Web Audio) ====================
+    // Research findings applied:
+    // BOOM: 4-layer synthesis. Sub-bass 60-90 Hz sine sweep (the felt chest-thump),
+    //   low noise rumble, mid-presence bandpass at 2-4 kHz (defines blast character),
+    //   short high transient. Single lowpass noise = tinny because it has no pitch-drop
+    //   and no mid-presence energy.
+    // CRACKLE: Stochastic Poisson timing (random clustering, not periodic rhythm).
+    //   Each burst is a 4 ms N-wave impulse (research: positive phase 2-5 ms),
+    //   highpass at 4.5-5 kHz (research: crackle spectral peaks at 4-5 kHz).
+    //
+    // Per type: [subFreq Hz, subGain, midGain, transGain, decaySec]
+    // subFreq = sine-sweep start; lower = deeper chest-thump (brocade vs. comet).
+    // mid bandpass fixed at 2800 Hz; trans highpass fixed at 5500 Hz.
+    const EXPL_PARAMS = {
+      // term: deepest bass, loudest, minimal transient — word firework = biggest shell
+      term:         [45,  1.00, 0.68, 0.12, 2.8],
+      brocade:      [60,  0.95, 0.55, 0.20, 2.2],
+      willow:       [65,  0.88, 0.50, 0.18, 2.0],
+      palm:         [68,  0.85, 0.50, 0.17, 1.8],
+      palmfrond:    [72,  0.80, 0.46, 0.16, 1.7],
+      waterfall:    [70,  0.80, 0.46, 0.16, 1.6],
+      chrysanthemum:[78,  0.75, 0.44, 0.16, 1.5],
+      dahlia:       [82,  0.72, 0.42, 0.15, 1.4],
+      // pistil: medium boom, fired twice 80ms apart in ensureThreeAnim
+      pistil:       [88,  0.68, 0.38, 0.14, 1.3],
+      peony:        [90,  0.70, 0.40, 0.14, 1.3],
+      fish:         [95,  0.65, 0.37, 0.13, 1.1],
+      spider:       [96,  0.65, 0.37, 0.13, 1.1],
+      fallingleaves:[98,  0.65, 0.36, 0.13, 1.0],
+      dragoneggs:   [105, 0.60, 0.34, 0.12, 1.0],
+      cracklingrain:[108, 0.60, 0.34, 0.12, 1.0],
+      crossette:    [110, 0.55, 0.32, 0.12, 0.9],
+      pistol:       [120, 0.55, 0.31, 0.12, 0.8],
+      strobe:       [125, 0.50, 0.29, 0.11, 0.8],
+      tourbillion:  [128, 0.50, 0.28, 0.11, 0.8],
+      // romancandle: mini-pop per rocket — very quiet, high-pitched, short
+      romancandle:  [165, 0.08, 0.05, 0.02, 0.25],
+      comet:        [138, 0.45, 0.25, 0.10, 0.7],
+      risingtail:   [142, 0.42, 0.24, 0.09, 0.6],
+      circle:       [150, 0.40, 0.22, 0.09, 0.6],
+      star:         [150, 0.40, 0.22, 0.09, 0.6],
+      heart:        [150, 0.40, 0.22, 0.09, 0.6],
+      rocket:       [145, 0.42, 0.24, 0.10, 0.6],
+      bitcoin:      [150, 0.40, 0.22, 0.09, 0.6],
+      square:       [158, 0.38, 0.20, 0.08, 0.5],
+      triangle:     [158, 0.38, 0.20, 0.08, 0.5],
+      diamond:      [158, 0.38, 0.20, 0.08, 0.5],
+    };
+    // Crackle: uniform random timing (0.5-1.5× mean interval, no heavy-tail clustering).
+    // Each event: pre-baked 3ms exponential decay in sample buffer → sharp snap, not hiss.
+    // Bandpass gives tonal character; lower Hz = warmer/bassier crackle (palm vs willow).
+    // [avgHz, baseGain, bandpassCenterHz, crklDurSec, startDelaySec]
+    // crklDurSec: crackle fades to silence over this window after startDelaySec.
+    // fallingleaves: pop only (no crackle entry). romancandle: handled separately.
+    const CRKL_PARAMS = {
+      brocade:      [40, 0.06, 6800, 1.90, 0.25],
+      willow:       [35, 0.05, 7200, 1.70, 0.25],
+      palm:         [38, 0.04, 4200, 1.00, 0.25], // warm/bassy, quietest
+      palmfrond:    [36, 0.05, 5800, 1.30, 0.25],
+      waterfall:    [45, 0.08, 5000, 1.60, 0.25], // robust, warm — louder than cracklingrain
+      cracklingrain:[42, 0.05, 6500, 1.00, 0.25], // lighter, higher, shorter
+      dragoneggs:   [50, 0.06, 6500, 0.08, 0.50], // quick burst only 0.50s→0.58s
+      crossette:    [33, 0.05, 6800, 0.50, 0.70], // waits 0.7s, done by 1.20s
+      risingtail:   [36, 0.04, 7200, 0.30, 0.25],
+      comet:        [36, 0.04, 7000, 0.35, 0.25],
+    };
+
+    let audioCtx = null, audioReady = false;
+    const _crklTimers = new Map(); // entry key -> timeoutId
+    const _crklEnd   = new Map(); // entry key -> Date.now() ms when crackle should be silent
+
+    function initAudio() {
+      if (audioReady) return;
+      try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        audioReady = true;
+      } catch (e) { console.warn('Audio init failed:', e); }
+    }
+
+    function _noiseLayer(durSec, filterType, freq, gainPk, decay, q) {
+      const sr  = audioCtx.sampleRate;
+      const buf = audioCtx.createBuffer(1, Math.ceil(sr * durSec), sr);
+      const d   = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      const src = audioCtx.createBufferSource();
+      src.buffer = buf;
+      const flt = audioCtx.createBiquadFilter();
+      flt.type = filterType; flt.frequency.value = freq;
+      if (q !== undefined) flt.Q.value = q;
+      const gain = audioCtx.createGain();
+      const t = audioCtx.currentTime;
+      gain.gain.setValueAtTime(gainPk, t);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + decay);
+      src.connect(flt); flt.connect(gain); gain.connect(audioCtx.destination);
+      src.start(t); src.stop(t + durSec);
+    }
+
+    function fireExplosion(type) {
+      if (!audioReady) return;
+      const p = EXPL_PARAMS[type]; if (!p) return;
+      const [subF, subG, midG, transG, decay] = p;
+      const t = audioCtx.currentTime;
+
+      // Layer 1: Sub-bass sine sweep — pitch-drops to 35% over 130ms ("whump" felt in chest)
+      const osc = audioCtx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(subF * 1.5, t);
+      osc.frequency.exponentialRampToValueAtTime(subF * 0.35, t + 0.13);
+      const og = audioCtx.createGain();
+      og.gain.setValueAtTime(subG, t);
+      og.gain.exponentialRampToValueAtTime(0.0001, t + decay * 0.5);
+      osc.connect(og); og.connect(audioCtx.destination);
+      osc.start(t); osc.stop(t + decay * 0.5);
+
+      // Layer 2: Low-frequency noise body (sub-bass rumble filling out the sine)
+      _noiseLayer(decay + 0.2, 'lowpass', subF * 2.0, subG * 0.45, decay);
+
+      // Layer 3: Mid body at 800 Hz — warmth and punch, not brightness
+      _noiseLayer(decay * 0.5, 'bandpass', 800, midG, decay * 0.4, 1.2);
+
+      // Layer 4: Short attack transient — 2200 Hz at half gain, just enough definition
+      _noiseLayer(0.06, 'highpass', 2200, transG * 0.5, 0.05);
+    }
+
+    // Crackle synthesis: pre-bake a 3ms exponential decay into the sample buffer itself.
+    // Instant attack (sample 0 = full amplitude) + 3ms decay constant = sharp snap not hiss.
+    // Bandpass (Q=2) gives tonal character vs highpass flat static; lower Hz = warmer crackle.
+    // Uniform random timing (0.5-1.5× mean) avoids the clustering of Poisson.
+    // Linear fade applied over the full crklDur window so it's silent before effect ends.
+    function _randomCrackle(key, type) {
+      const now = Date.now();
+      const end = _crklEnd.get(key) || 0;
+      if (!audioReady || !threeActive.has(key) || now >= end) {
+        _crklTimers.delete(key); _crklEnd.delete(key); return;
+      }
+      const [hz, gain, bpHz, crklDur] = CRKL_PARAMS[type];
+      const fade = Math.max(0, (end - now) / (crklDur * 1000)); // 1→0 linear over crklDur
+      const sr = audioCtx.sampleRate;
+      const dur = 0.022;
+      const buf = audioCtx.createBuffer(1, Math.ceil(sr * dur), sr);
+      const d = buf.getChannelData(0);
+      const decayK = sr * 0.003; // 3ms time constant — instant attack, snap not hiss
+      for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / decayK);
+      const src = audioCtx.createBufferSource();
+      src.buffer = buf;
+      const flt = audioCtx.createBiquadFilter();
+      flt.type = 'bandpass'; flt.frequency.value = bpHz; flt.Q.value = 2.0;
+      const gn = audioCtx.createGain();
+      gn.gain.value = gain * fade * (0.35 + Math.random() * 1.3);
+      src.connect(flt); flt.connect(gn); gn.connect(audioCtx.destination);
+      src.start(audioCtx.currentTime); src.stop(audioCtx.currentTime + dur);
+      const delay = Math.max(5, (1000 / hz) * (0.5 + Math.random()));
+      _crklTimers.set(key, setTimeout(() => _randomCrackle(key, type), delay));
+    }
+
+    function _startCrackle(key, type) {
+      if (!audioReady || !CRKL_PARAMS[type]) return;
+      if (_crklTimers.has(key)) clearTimeout(_crklTimers.get(key));
+      const spd = (threeActive.get(key) || {}).speed || 1;
+      const crklDur = CRKL_PARAMS[type][3] / spd; // compress/extend with speed slider
+      _crklEnd.set(key, Date.now() + crklDur * 1000);
+      _randomCrackle(key, type);
+    }
+
     function initPreview() { initThreePreview(); }
     // Called by the module shim AFTER the THREE libraries are on window.
     window.startThreePreview = initPreview;
@@ -1527,6 +1718,8 @@
     function initCanvases() {
       previewCanvas.width = 576;
       previewCanvas.height = 576;
+      handleCanvas.width = 576;
+      handleCanvas.height = 576;
       if (timeline.length > 0 || placedAnimation) {
         drawPreview();
       }
@@ -1774,6 +1967,12 @@
         shapeStyle = animationType.value;
       }
 
+      // The Term resets to spacebar option 2 (its visible peak) on EVERY Place press
+      // — unlike other categories, which keep the last spacebar choice — because its
+      // frame-1 rise is off-screen and loads as a blank canvas. Spacebar still cycles
+      // all three from here, and Accept saves whichever frame is shown.
+      if (category === 'term') freezeIndex = FREEZE_POINTS.indexOf('largest');
+
       placedAnimation = {
         type,
         category: category,
@@ -1834,8 +2033,8 @@
 
       // Background/foreground are full-canvas LAYERS: they span the entire show
       // from t=0 and are exempt from the 15s burst limit. The TERM word-firework is
-      // a singleton too, but timed to the END (it plays its whole rise->burst and
-      // holds through the loop) and likewise exempt from the limit.
+      // a singleton too, and exempt from the limit, but otherwise behaves like a
+      // normal firework: its chosen freeze frame is its start frame (see below).
       const isLayer = (category === 'background' || category === 'foreground');
       const isTerm = (category === 'term');
 
@@ -1847,9 +2046,6 @@
       if (isLayer) {
         placedAnimation.startFrame = 0;
         durationMs = animData.duration;            // full show span
-      } else if (isTerm) {
-        placedAnimation.startFrame = 1;            // play the full sequence
-        durationMs = animData.duration;            // ~2.3s rise -> burst -> hold
       } else if (isThreeNative(placedAnimation)) {
         const kf = keyFramesFor(type);
         if (kf) {
@@ -2101,6 +2297,9 @@
       }
     });
 
+    // Init audio on first user gesture (browser requires interaction before AudioContext).
+    document.addEventListener('pointerdown', initAudio, { once: true });
+
     // Viewing-layer order: background (back) -> fireworks -> foreground (front).
     // The foreground is the topmost layer and HIDES whatever is behind it.
     function layerRank(category) {
@@ -2120,26 +2319,31 @@
 
       if (isPlaying) return;   // during playback the Three overlay shows true motion
 
-      // Editing handles for the placed animation.
-      if (placedAnimation) {
-        previewCtx.globalAlpha = 1;
-
-        // Draw center point
-        previewCtx.fillStyle = '#fff';
-        previewCtx.strokeStyle = '#000';
-        previewCtx.lineWidth = 2;
-        previewCtx.beginPath();
-        previewCtx.arc(placedAnimation.x, placedAnimation.y, 6, 0, Math.PI * 2);
-        previewCtx.stroke();
-        previewCtx.fill();
-
-        // Draw bounding box
-        previewCtx.strokeStyle = '#2196F3';
-        previewCtx.lineWidth = 2;
-        previewCtx.setLineDash([5, 5]);
-        const size = 100 * placedAnimation.scale;
-        previewCtx.strokeRect(placedAnimation.x - size/2, placedAnimation.y - size/2, size, size);
-        previewCtx.setLineDash([]);
+      // Roman candle direction arrow — drawn on handle canvas above Three.js layer.
+      handleCtx.clearRect(0, 0, handleCanvas.width, handleCanvas.height);
+      if (placedAnimation && placedAnimation.type === 'romancandle') {
+        const rot = (placedAnimation.rotation || 0) * Math.PI / 180;
+        const arrowLen = 80 * Math.max(0.5, placedAnimation.scale);
+        const headLen = 16;
+        const cx = placedAnimation.x, cy = placedAnimation.y;
+        const adx = Math.sin(rot), ady = -Math.cos(rot);
+        const ex = cx + adx * arrowLen, ey = cy + ady * arrowLen;
+        const ang = Math.atan2(ady, adx);
+        handleCtx.save();
+        handleCtx.strokeStyle = '#fff';
+        handleCtx.fillStyle = '#fff';
+        handleCtx.lineWidth = 2.5;
+        handleCtx.beginPath();
+        handleCtx.moveTo(cx, cy);
+        handleCtx.lineTo(ex, ey);
+        handleCtx.stroke();
+        handleCtx.beginPath();
+        handleCtx.moveTo(ex, ey);
+        handleCtx.lineTo(ex - headLen * Math.cos(ang - Math.PI / 6), ey - headLen * Math.sin(ang - Math.PI / 6));
+        handleCtx.lineTo(ex - headLen * Math.cos(ang + Math.PI / 6), ey - headLen * Math.sin(ang + Math.PI / 6));
+        handleCtx.closePath();
+        handleCtx.fill();
+        handleCtx.restore();
       }
     }
 
@@ -2461,9 +2665,9 @@
       // modules import the bare specifier 'three'), so bake their URLs at export
       // time: on-chain when an id exists, else local.
       const threeId = INSCRIPTION_IDS['three'];
-      const bloomId = INSCRIPTION_IDS['three-postprocessing-bundle.js'];
+      const bloomId = INSCRIPTION_IDS['three-bloom.js'];
       const threeURL = threeId ? CONTENT_BASE + threeId : './lib/three.module.js';
-      const bloomURL = bloomId ? CONTENT_BASE + bloomId : './lib/three-postprocessing-bundle.js';
+      const bloomURL = bloomId ? CONTENT_BASE + bloomId : './lib/three-bloom.js';
 
       // Loop point: end 0.5s after the LAST firework (body/tail/shape) finishes
       // — background/foreground layers span the whole show and don't count —
@@ -2501,7 +2705,7 @@
   }
   <\/script>
   <!-- Local-only libs (for fully offline testing) — swap with the import map above:
-  { "imports": { "three": "./lib/three.module.js", "three-bloom": "./lib/three-postprocessing-bundle.js" } } -->
+  { "imports": { "three": "./lib/three.module.js", "three-bloom": "./lib/three-bloom.js" } } -->
 </head>
 <body>
   <div id="stage"></div>
@@ -2713,7 +2917,7 @@
 
 <!--
   BEFORE INSCRIBING:
-  1. Inscribe lib/three.module.js, lib/three-postprocessing-bundle.js and each
+  1. Inscribe lib/three.module.js, lib/three-bloom.js and each
      effects/*.js module used by this show.
   2. Replace the two import-map URLs and every value in the EFFECTS map above with
      their /content/<id> inscription URLs.
