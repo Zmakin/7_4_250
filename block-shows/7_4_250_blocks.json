@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-06-25T04:01:09.144Z",
+ "generatedAt": "2026-06-26T17:02:27.839Z",
  "kind": "remaining",
  "rulesetFrozen": {
   "CANVAS": 576,
@@ -114,6 +114,9 @@
   },
   "MOON_TZ_OFFSET": -4,
   "MOON_CENTER_PLATEAU": 1.5,
+  "FG_TX_LAKE": 50,
+  "FG_TX_PARK": 500,
+  "FG_TX_BASE": 3000,
   "TERM_ENABLE": true,
   "TERMS": [
    "america250",

@@ -2,10 +2,13 @@
 // pure-black silhouette looking out over a calm lake from a dock: two Adirondack
 // CHAIRS (slat fan on a solid seat base) on a plank DOCK in perspective (seams
 // see-through). The water is drawn as thin wavy ripple lines (NOT a solid fill) so
-// the show reads through the gaps like reflections on the surface. Lots of
-// intentional holes so the background shines through.
+// the show reads through the gaps like reflections on the surface.
 //
-// Full-frame plane carrying a CanvasTexture (transparent above, black below).
+// Transparent holes (ripple gaps, dock seams, chair slats) show the BACKGROUND
+// gradient rather than the fireworks layer. The host passes opts.bgType so this
+// canvas replicates the exact colours of the active background in the lower zone.
+//
+// Full-frame plane carrying a CanvasTexture (transparent above, bg-coloured below).
 // renderOrder 100 (front). FRAME-BASED static contract.
 import { PlaneGeometry, Mesh, MeshBasicMaterial, CanvasTexture, SRGBColorSpace } from 'three';
 
@@ -16,6 +19,65 @@ export const PEAK_FRAME = 1;
 
 const VIEW_SPAN = 42.9, VIEW_CENTER_Y = 12, OVER = 1.12;
 const PAD = (OVER - 1) / (2 * OVER);
+
+// Paint the active background's exact colour into a horizontal strip of the fg
+// canvas (rows fromY..H-1), so transparent gaps in the silhouette (seams, slats,
+// ripple gaps) show the bg instead of the fireworks layer behind it.
+//
+// Both bg and fg canvases use CanvasTexture flipY=true on the same-sized plane,
+// so canvas row y / (H-1) is the same world-height fraction in both — using the
+// bg's own formula here produces a pixel-exact match at every world position.
+function bgFill(g, W, H, bgType, fromY) {
+  if (bgType === 'navygradient') {
+    // Exact match to bg_navygradient.js: [1,3,10] near-black (top) -> [0,22,56] navy (bottom)
+    const img = g.createImageData(W, H - fromY);
+    const top = [1, 3, 10], bot = [0, 22, 56];
+    for (let y = fromY; y < H; y++) {
+      const u = y / (H - 1), e = u * u * (3 - 2 * u);
+      const r0 = top[0] + (bot[0] - top[0]) * e;
+      const g0 = top[1] + (bot[1] - top[1]) * e;
+      const b0 = top[2] + (bot[2] - top[2]) * e;
+      const row = y - fromY;
+      for (let x = 0; x < W; x++) {
+        const d = (Math.random() + Math.random() - 1) * 1.5;
+        const i = (row * W + x) * 4;
+        img.data[i]     = Math.max(0, Math.min(255, Math.round(r0 + d)));
+        img.data[i + 1] = Math.max(0, Math.min(255, Math.round(g0 + d)));
+        img.data[i + 2] = Math.max(0, Math.min(255, Math.round(b0 + d)));
+        img.data[i + 3] = 255;
+      }
+    }
+    g.putImageData(img, 0, fromY);
+  } else if (bgType === 'starsnavy' || bgType === 'moonnavy') {
+    // Exact match to bg_starfield.js tone='navy': [1,2,7] (top) -> [0,14,38] (bottom)
+    const img = g.createImageData(W, H - fromY);
+    const top = [1, 2, 7], bot = [0, 14, 38];
+    for (let y = fromY; y < H; y++) {
+      const u = y / (H - 1), e = u * u * (3 - 2 * u);
+      const r0 = top[0] + (bot[0] - top[0]) * e;
+      const g0 = top[1] + (bot[1] - top[1]) * e;
+      const b0 = top[2] + (bot[2] - top[2]) * e;
+      const row = y - fromY;
+      for (let x = 0; x < W; x++) {
+        const d = (Math.random() + Math.random() - 1) * 1.4;
+        const i = (row * W + x) * 4;
+        img.data[i]     = Math.max(0, Math.min(255, Math.round(r0 + d)));
+        img.data[i + 1] = Math.max(0, Math.min(255, Math.round(g0 + d)));
+        img.data[i + 2] = Math.max(0, Math.min(255, Math.round(b0 + d)));
+        img.data[i + 3] = 255;
+      }
+    }
+    g.putImageData(img, 0, fromY);
+  } else if (bgType === 'space') {
+    // bg_space.js base plane: pure black rgb(0,0,0)
+    g.fillStyle = 'rgb(0,0,0)';
+    g.fillRect(0, fromY, W, H - fromY);
+  } else {
+    // allblack / starsblack / moonblack: bg base plane is rgb(25,25,30)
+    g.fillStyle = 'rgb(25,25,30)';
+    g.fillRect(0, fromY, W, H - fromY);
+  }
+}
 
 function buildMesh(paint) {
   const W = 1152, H = 1152;
@@ -35,8 +97,14 @@ function buildMesh(paint) {
   return { object, setFrame, frames: FRAMES, dispose };
 }
 
-export function create() {
+export function create(opts = {}) {
+  const bgType = opts.bgType || 'allblack';
   return buildMesh((g, W, H, fx, fy) => {
+    // Fill the lower zone (chairs + dock + water area) with the exact bg colours
+    // so transparent gaps show the background, not the fireworks layer.
+    // fy(0.22) is ~80 px above the chair tops — a safe upper edge for the fill.
+    bgFill(g, W, H, bgType, Math.round(fy(0.095)));
+
     g.fillStyle = '#000'; g.strokeStyle = '#000'; g.lineCap = 'round'; g.lineJoin = 'round';
     const pp = dp => H * dp / OVER;
     const dot = (x, y, r) => { g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill(); };

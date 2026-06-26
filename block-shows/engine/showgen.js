@@ -99,6 +99,12 @@ export const DEFAULT_RULESET = {
   MOON_TZ_OFFSET: -4,       // EDT hours from UTC
   MOON_CENTER_PLATEAU: 1.5, // hours either side of transit the moon "holds" centre
 
+  // Foreground: weighted pick from mb[12] (uniformly random in every era/year).
+  // 'none' = no foreground. Adjust weights to tune frequency of each scene.
+  FG_WEIGHTS: {
+    none: 10, blackoverlay: 10, baseball: 20, lakeside: 20, football: 20, park: 20,
+  },
+
   // Term word-firework: chosen from a Bitcoin byte (hb[3]) across this list so it
   // varies block-to-block but is fully deterministic. (May be the same word for the
   // whole run -- that's fine per spec.) Set TERM_ENABLE false to drop all terms.
@@ -300,6 +306,18 @@ export function generateShow(block, RULESET = DEFAULT_RULESET) {
   if (bgFacing != null) bgEntry.facing = bgFacing;
   if (moon) { bgEntry.moonPhase = moon.phase; bgEntry.moonProg = moon.prog; bgEntry.moonVisible = moon.visible; }
   timeline.push(bgEntry);
+
+  // Foreground: weighted pick from mb[12] — uniform across all eras/years.
+  const fgPick = weightedPick(R.FG_WEIGHTS, mb[12] / 256);
+  const fgType = fgPick === 'none' ? null : fgPick;
+  if (fgType) {
+    timeline.push({
+      type: fgType, category: 'foreground', subType: null, shape: null,
+      color: null, color2: null, speed: 1,
+      x: R.CANVAS / 2, y: R.CANVAS / 2, scale: 1, rotation: 0,
+      startTime: 0, freeze: 'first', startFrame: 0, duration: L, id: idSeq++,
+    });
+  }
 
   let lastBurstEnd = 0;
   for (let i = 0; i < N; i++) {
