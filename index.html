@@ -1338,7 +1338,7 @@
         sceneFor(anim).add(pivot);   // route to bg / fireworks / fg layer
         entry = { inst, pivot, sig, type: anim.type, speed: anim.speed || 1 };
         threeActive.set(key, entry);
-        if (!isPlaced && !isLayer && EXPL_PARAMS[anim.type]) {
+        if (!isPlaced && !isLayer && isPlaying && EXPL_PARAMS[anim.type]) {
           const spd = anim.speed || 1;
           // term fires at 0.93s of the animation (speed-adjusted to real time)
           if (anim.type === 'term') {
