@@ -159,14 +159,16 @@ Every show is a pure function of one block — no randomness outside the block's
 ### Palette — `merkle_root` bytes
 
 | Byte(s) | What it controls |
-|---|---|                                                                                                           | `[0..1]` | **Base hue H₀** — two bytes → 0hole palette spins from |
+|---|---|                                                                                                           
+| `[0..1]` | **Base hue H₀** — two bytes → 0hole palette spins from |
 | `[2]` | **Palette scheme** — analogous / complementary / triadic / tetradic / split |
 | `[3]` | **Base saturation** — 70–100% |
 | `[4]` | **Base lightness** — 45–60% |
 | `[8]` | **Background type** — weighted pick: allblack, navygradient, starsblack, starsnavy, moonblack, moonnavy, space (rarest ~3%) |
 | `[9]` | **Star-field compass facing** — which direction the constellation field rotates to |
-| `[10]` | **Word firework** — which of 5 phrases fires (AMERICA 250 / 7/4/250 / HAPPY 4TH OF JULY / USA / HAPPY 250TH 4TH) |                                                                                                              | `[12]` | **Foreground scene** — none / bas park / blackoverlay |
-                                                                                                                    ---
+| `[10]` | **Word firework** — which of 5 phrases fires (AMERICA 250 / 7/4/250 / HAPPY 4TH OF JULY / USA / HAPPY 250TH 4TH) |                                                                                  | `[12]` | **Foreground scene** — none / bas park / blackoverlay |
+
+---
 
 ### Per-shell attributes — the block byte-tape
 
