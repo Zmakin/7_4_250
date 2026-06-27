@@ -2436,12 +2436,31 @@
         const kf = keyFramesFor(type);
         if (kf) {
           placedAnimation.startFrame = freezeFrame(type, placedAnimation.freeze);
-          const startF = placedAnimation.startFrame;
           durationMs = (kf.total / kf.fps * 1000) / placedAnimation.speed;
-          // Offset startTime so the chosen frame arrives at currentTime. Can be
-          // negative — the show starts at 0.00, early frames are clipped naturally.
-          const frameOffsetMs = ((startF - 1) / kf.fps * 1000) / placedAnimation.speed;
-          startTime = currentTime - frameOffsetMs;
+          const isTailFrameState = includeTailCheckbox.checked && category === 'body' && freezeIndex >= 3;
+          if (isTailFrameState) {
+            // currentTime is where the TAIL's freeze frame lands; derive body startTime from there
+            const tType = tailTypeSelect.value;
+            const tKf = keyFramesFor(tType);
+            if (tKf) {
+              const tailDurationMs = (tKf.total / tKf.fps * 1000) / placedAnimation.speed;
+              const tailFreezePt = FREEZE_POINTS[freezeIndex - 3];
+              const tailFreezeFrame = freezeFrame(tType, tailFreezePt);
+              const tailFrameOffsetMs = ((tailFreezeFrame - 1) / tKf.fps * 1000) / placedAnimation.speed;
+              const tailStartTime = currentTime - tailFrameOffsetMs;
+              startTime = tailStartTime + tailDurationMs + 100;
+            } else {
+              // tail module not ready — fall back to body frame offset
+              const startF = placedAnimation.startFrame;
+              const frameOffsetMs = ((startF - 1) / kf.fps * 1000) / placedAnimation.speed;
+              startTime = currentTime - frameOffsetMs;
+            }
+          } else {
+            // currentTime is where the BODY's freeze frame lands
+            const startF = placedAnimation.startFrame;
+            const frameOffsetMs = ((startF - 1) / kf.fps * 1000) / placedAnimation.speed;
+            startTime = currentTime - frameOffsetMs;
+          }
         }
       }
 
