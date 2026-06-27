@@ -139,118 +139,79 @@ The builder and all exported shows load their dependencies from Bitcoin. The ins
 
 The post-processing bundle (`three-bloom.min.js`) contains the full Three.js `three/addons/postprocessing/` pipeline needed for the multi-layer bloom renderer: **EffectComposer**, **RenderPass**, **ShaderPass**, **UnrealBloomPass**, plus their internal dependencies (CopyShader, LuminosityHighPassShader, Pass, FullScreenQuad).
 
-## Here's the complete picture of what Bitcoin data drives what:
+## How Bitcoin block data drives each show
+
+Every show is a pure function of one block — no randomness outside the block's own bytes. The same ruleset applies to all 2,518 July 4th blocks (2009–2025).
 
 ---
-- Macro parameters — named block fields
 
-┌──────────────┬──────────────────┬──────────────────────────────────────────────────────────────────────────────┐
-│   Bitcoin    │ What it controls │                                     How                                      │
-│    field     │                  │                                                                              │
-├──────────────┼──────────────────┼──────────────────────────────────────────────────────────────────────────────┤
-│ nonce        │ Show length      │ Treated as a uniform random number u = nonce/2³², then a triangular          │
-│ (32-bit)     │ (7–15s)          │ distribution → most shows 10–13s, 15s rare, 7s very rare                     │
-├──────────────┼──────────────────┼──────────────────────────────────────────────────────────────────────────────┤
-│ tx_count     │ Shell density /  │ Log-compressed vs a reference count of 2500 txs. More transactions → more    │
-│              │ burst count      │ shells. Clamped to 14–64 total.                                              │
-├──────────────┼──────────────────┼─────────────────────────────────────────────────┤
-┌──────────────┬──────────────────┬──────────────────────────────────────────────────────────────────────────────┐
-│   Bitcoin    │ What it controls │                                     How                                      │
-│    field     │                  │                                                                              │
-├──────────────┼──────────────────┼─────────────────────────────────────────────────┤
-│ nonce        │ Show length      │ Treated as a uniform random number u = nonce/2³², then a triangular          │
-│ (32-bit)     │ (7–15s)          │ distribution → most shows 10–13s, 15s rare, 7s very rare                     │
-├──────────────┼──────────────────┼──────────────────────────────────────────────────────────────────────────────┤
-│ tx_count     │ Shell density /  │ Log-compressed vs a reference count of 2500 txs. More transactions → more    │
-│              │ burst count      │ shells. Clamped to 14–64 total.                                              │
-├──────────────┼──────────────────┼──────────────────────────────────────────────────────────────────────────────┤
-│ totalFees /  │                  │ The fees-to-reward ratio (how much of the block subsidy came from fees).     │
-│ reward       │ Finale intensity │ Higher relative fees → bigger scale boost on finale shells and stronger      │
-│              │                  │ clusteri                                        │
-├──────────────┼──────────────────┼──────────────────────────────────────────────────────────────────────────────┤
-│              │ Moon position &  │ Converteual synodic lunar phase + whether the   │
-│ timestamp    │ visibility       │ moon was above the horizon at EDT mine time. This is an astronomically       │
-│              │                  │ accurate moon.                                                               │
-└──────────────┴──────────────────┴──────────────────────────────────────────────────────────────────────────────┘
+### Macro parameters — named block fields
+
+| Bitcoin field | What it controls | How |
+|---|---|---|
+| **`nonce`** (32-bit) | **Show length** (7–15s) | Treated as a uniform random number `u = nonce/2³²`, then a triangular distribution → most shows 10–13s, 15s rare, 7s very rare |
+| **`tx_count`** | **Shell density / burst count** | Log-compressed vs a reference count of 2,500 txs. More transactions → more shells. Clamped to 14–64
+| **`totalFees / reward`** | **Finale intensity** | The fees-to-reward ratio (how much of the block subsidy came from fees). Higher relative fees → bigger scale boost on finale shells and stronger clustering at the end. |
+| **`timestamp`** | **Moon position & visibiJulian Date → actual synodic lunar phase +whether the moon was above the horizon at EDT mine time. Astronomically accurate. |
 
 ---
-- Palette — merkle_root bytes
 
-┌─────────┬────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ Byte(s) │                                                                           │
-├─────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ [0..1]  │ Base hue H₀ — two bytes → 0–359°, the anchor color the whole palette spins from                        │
-├─────────┼───────────────────────────────────────────────────────────────────────────┤
-│ [2]     │ Palette scheme — analogous / complementary / triadic / tetradic / split (5 options)                    │
-├─────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ [3]     │ Base saturation — 70–100%                                                                              │
-├─────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ [4]     │ Base lightness — 45–60%                                                                                │
-├─────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ [8]     │ Background type — weighted pick: allblack, navygradient, starsblack, starsnavy, moonblack, moonnavy,   │
-│         │ space (rarest ~3%)                                                                                     │
-├─────────┼───────────────────────────────────────────────────────────────────────────┤
-│ [9]     │ Star-field compass facing — which direction the real star constellation field rotates to               │
-├─────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ [10]    │ Term word — which of the 5 word- 7/4/250, HAPPY 4TH OF JULY, USA, HAPPY   │
-│         │ 250TH 4TH)                                                                                             │
-├─────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ [12]    │ Foreground scene — none / blackoverlay / baseball / lakeside / football / park                         │
-└─────────┴────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+### Palette — `merkle_root` bytes
 
----
-- Per-shell attributes — the block byte-tape
+| Byte(s) | What it controls |
+|---|---|                                                                                                           | `[0..1]` | **Base hue H₀** — two bytes → 0hole palette spins from |
+| `[2]` | **Palette scheme** — analogous / complementary / triadic / tetradic / split |
+| `[3]` | **Base saturation** — 70–100% |
+| `[4]` | **Base lightness** — 45–60% |
+| `[8]` | **Background type** — weighted pick: allblack, navygradient, starsblack, starsnavy, moonblack, moonnavy, space (rarest ~3%) |
+| `[9]` | **Star-field compass facing** — which direction the constellation field rotates to |
+| `[10]` | **Word firework** — which of 5 phrases fires (AMERICA 250 / 7/4/250 / HAPPY 4TH OF JULY / USA / HAPPY 250TH 4TH) |                                                                                                              | `[12]` | **Foreground scene** — none / bas park / blackoverlay |
+                                                                                                                    ---
 
-Every single shell reads its own dedicated byte from a 128-byte tape made of real consensus bytes: hash(32) +
-merkle_root(32) + prev_hash(32) + nonce/bits/size/weight/tx_count (8 × 4 bytes). Eachattribute uses a different starting offset and an odd stride (coprime with 128), so the first ~128 shells each read a distinct byte for each attribute:
+### Per-shell attributes — the block byte-tape
 
-┌──────────────────────┬──────────────────┬──────────────────────────────────────────────────────────────────────┐
-│      Attribute       │      Tape        │                             What it sets                             │
-│                      │  offset/stride   │                                         │
-├──────────────────────┼──────────────────┼──────────────────────────────────────────────────────────────────────┤
-│ Is this a shape      │ o:0 s:3          │ 8% chance → bitcoin/star/heart/etc instead of a burst                │
-│ accent?              │                  │                                         │
-├──────────────────────┼──────────────────┼──────────────────────────────────────────────────────────────────────┤
-│ Shell type           │ o:1 s:5          │ llow, dahlia, etc.)                     │
-├──────────────────────┼──────────────────┼──────────────────────────────────────────────────────────────────────┤
-│ Speed                │ o:2 s:7          │ Playback speed 0.6–1.4× (also sets duration: faster = shorter slot)  │
-├──────────────────────┼──────────────────┼──────────────────────────────────────────────────────────────────────┤
-│ Has tail?            │ o:3 s:9          │ 55% chance of a rising tail lead-in                                  │
-├──────────────────────┼──────────────────┼──────────────────────────────────────────────────────────────────────┤
-│ Tail type            │ o:4 s:11         │ d                                       │
-├──────────────────────┼──────────────────┼──────────────────────────────────────────────────────────────────────┤
-│ X position           │ o:5 s:13         │ Horizontal placement (stratified + jitter so shells spread across    │
-│                      │                  │                                         │
-├──────────────────────┼──────────────────┼──────────────────────────────────────────────────────────────────────┤
-│ Y position           │ o:6 s:15         │ Burst height in the upper 55% of the sky                             │
-├──────────────────────┼──────────────────┼──────────────────────────────────────────────────────────────────────┤
-│ Body rotation        │ o:7 s:17         │                                         │
-├──────────────────────┼──────────────────┼──────────────────────────────────────────────────────────────────────┤
-│ Tail rotation        │ o:8 s:19         │ ±28° launch angle; extreme bytes (top/bottom 20%) go up to ±62° for  │
-│                      │                  │ corner entries                                                       │
-├──────────────────────┼──────────────────┼──────────────────────────────────────────────────────────────────────┤
-│ Scale                │ o:9 s:21         │ Size 0.6–2.2× (skewed large; finale shells get an additional         │
-│                      │                  │ fees-ratio bonus)                                                    │
-├──────────────────────┼──────────────────┼──────────────────────────────────────────────────────────────────────┤
-│ Tail/body blank gap  │ o:10 s:23        │ 0–150ms dead air between tail apex and burst                         │
-├──────────────────────┼──────────────────┼─────────────────────────────────────────┤
-│ Start jitter         │ o:11 s:25        │ Randomizes each shell slightly off its even grid slot                │
-├──────────────────────┼──────────────────┼─────────────────────────────────────────┤
-│ Hue                  │ o:12 s:27        │ Picks which spoke of the palette scheme + ±12° jitter, then          │
-│                      │                  │ diversity guard                                                      │
-├──────────────────────┼──────────────────┼──────────────────────────────────────────────────────────────────────┤
-│ Hue jitter           │ o:13 s:29        │ Fine ±12° nudge on top of the palette spoke                          │
-├──────────────────────┼──────────────────┼──────────────────────────────────────────────────────────────────────┤
-│ Saturation           │ o:14 s:31        │ saturation                              │
-├──────────────────────┼──────────────────┼──────────────────────────────────────────────────────────────────────┤
-│ Lightness            │ o:15 s:33        │ ±7% from the merkle-set base lightness                               │
-├──────────────────────┼──────────────────┼─────────────────────────────────────────┤
-│ 2nd color (pistil    │ o:16 s:35        │ Picks a second palette hue for the pistil's inner ring              │ only)                │                  │                                         │
-└──────────────────────┴──────────────────┴──────────────────────────────────────────────────────────────────────┘
+Every shell reads its own dedicated byte from a 128-byte tape built from real consensus bytes: `hash(32) + merkle_root(32) + prev_hash(32) + nonce/bits/version/timestamp/mediantime/size/weight/tx_count` (8 × 4 bytes). Each attribute uses a different offset and an oddo the first ~128 shells each read a distinctblock byte per attribute.
+
+| Attribute | What it sets |
+|---|---|
+| Is shape accent? | 8% chance → bitcoin / s a burst |
+| Shell type | Which burst effect (peony, willow, dahlia, dragoneggs, etc.) |
+| Speed | Playback speed 0.6–1.4× (faster = shorter duration slot) |
+| Has tail? | 55% chance of a rising-tail lead-in |
+| Tail type | risingtail / comet / palmfrond |
+| X position | Horizontal placement — stratified + jitter so shells spread across the full width |
+| Y position | Burst height, confined to the
+| Body rotation | ±24° spin on the burst |
+| Tail rotation | ±28° launch angle; extreme bytes go up to ±62° for steep corner entries |
+| Scale | Size 0.6–2.2× (skewed large; finales-ratio bonus) |
+| Tail/body gap | 0–150ms blank delay between tail apex and burst |
+| Start jitter | Nudges each shell off its even grid slot |
+| Hue | Picks a palette scheme spoke + ±12° iversity guard prevents same-hue runs |
+| Saturation | ±8% from the merkle-set base |
+| Lightness | ±7% from the merkle-set base |
+| 2nd color | Pistil shells only — a second palette hue for the inner ring |
 
 ---
-- Cadence — hash byte [0]
-                                                                                                                The first byte of the block hash (which is aue to proof-of-work, but varies significantly on early blocks) controls whether shells are evenly spaced vs. clustered in bursts. Early 2009 blocks with less leading-zero work have more cadence variety  byte is almost always zero.
+
+### Cadence — `hash` byte `[0]`
+
+The first byte of the block hash controls whether shells are evenly spaced vs. clustered in bursts. On modern blocks this byte is near zero (proof-of-work leading zeros), producing more even spacing; early 2009–2010 blocks with less accumulated work have higher values and more
 
 ---
-Short version: nonce = length, tx_count = density, fees/reward = finale punch, merkle_root = entire color palette + background + scene + word, timestamp = actual moon phase/position, and the raw consensus bytes of hash + merkle + prevhash + scalar fields collectively decide every individual shell's type/color/position/size/speed/rotation.
+
+### Color diversity guard
+
+Colors come from the merkle-seeded palette, but the engine tracks the last 4 emitted hues and rotates any new hue that lands within 25° of a recent one by the **golden angle (137.5°)** until it clears. This guarantees spread without breaking the merkle-driven palette.
+
+---
+
+### Summary
+
+| Field | Controls |
+|---|---|
+| `nonce` | Show length |
+| `tx_count` | Shell count / density |
+| `totalFees / reward` | Finale scale boost |
+| `timestamp` | Moon phase + sky position |
+| `merkle_root` | Entire color palette, background, foreground scene, word firework |
+| `hash + merkle + prev_hash + scalar fieldsy individual shell's type, color, position,size, speed, rotation |
