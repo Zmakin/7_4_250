@@ -155,6 +155,7 @@ Every show is a pure function of one block — no randomness outside the block's
 | **`timestamp`** | **Moon position & visibiJulian Date → actual synodic lunar phase +whether the moon was above the horizon at EDT mine time. Astronomically accurate. |
 
 ---
+**[Open the Builder →](https://zmakin.github.io/7_4_250/)**
 
 ### Palette — `merkle_root` bytes
 
@@ -206,6 +207,7 @@ The first byte of the block hash controls whether shells are evenly spaced vs. c
 Colors come from the merkle-seeded palette, but the engine tracks the last 4 emitted hues and rotates any new hue that lands within 25° of a recent one by the **golden angle (137.5°)** until it clears. This guarantees spread without breaking the merkle-driven palette.
 
 ---
+**[Open the Builder →](https://zmakin.github.io/7_4_250/)**
 
 ### Summary
 
