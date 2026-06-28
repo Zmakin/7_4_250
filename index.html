@@ -3214,9 +3214,9 @@
     importBtn.addEventListener('click', () => window.openWalletFlow('import'));
 
     // Mobile button proxies (shown on narrow screens in place of header buttons)
-    document.getElementById('mobile-import-btn').addEventListener('click', () => window.openWalletFlow('import'));
-    document.getElementById('mobile-save-btn').addEventListener('click', () => window.openWalletFlow('save'));
-    document.getElementById('mobile-new-btn').addEventListener('click', () => newBtn.click());
+    document.getElementById('mobile-import-btn')?.addEventListener('click', () => window.openWalletFlow('import'));
+    document.getElementById('mobile-save-btn')?.addEventListener('click', () => window.openWalletFlow('save'));
+    document.getElementById('mobile-new-btn')?.addEventListener('click', () => newBtn.click());
 
     // ---- ⚡ Block Builder: generate a Bitcoin-block show & auto-play (watch-only) ----
     (function setupBlockBuilder() {
@@ -3943,3 +3943,200 @@
           if (data.export_json) items.push({ label: data.export_json.name || 'Exported show', sub: 'Exported (editable)', proj: data.export_json });
         }
         if (!items.length) { setMsg('No saved projects found for that wallet.', 'err'); elActions.append(btn('Close', '', closeModal)); return; }
+        setMsg('Pick a project to load.', 'info');
+        const wrap = document.createElement('div'); wrap.className = 'wm-list';
+        items.forEach(it => {
+          const el = document.createElement('div'); el.className = 'wm-slot';
+          el.innerHTML = '<div><div class="nm">' + escapeHtml(it.label) + '</div><div class="sub">' + it.sub + '</div></div>';
+          el.addEventListener('click', () => loadProject(it.proj));
+          wrap.appendChild(el);
+        });
+        elContent.appendChild(wrap);
+        elActions.append(btn('Cancel', '', closeModal));
+      }
+      function loadProject(p) {
+        if (!p || !Array.isArray(p.timeline)) { setMsg('That project looks invalid.', 'err'); return; }
+        timeline = p.timeline;
+        projectName = p.name || 'Imported Project';
+        currentTime = 0;
+        placedAnimation = null;
+        updateTimeline();
+        drawPreview();
+        updateTimeDisplay();
+        setMsg('Loaded "' + projectName + '" ✓', 'ok');
+        setTimeout(closeModal, 700);
+      }
+
+      // ---- EXPORT: build show + editable sidecar, confirm overwrite ----
+      async function flowExport(wallet) {
+        elTitle.textContent = 'Export Show';
+        elContent.innerHTML = ''; elActions.innerHTML = '';
+        setMsg('Checking for an existing export…', 'info');
+        let summary;
+        try { summary = await rpc('list_wallet', { p_wallet: wallet }); }
+        catch (e) { setMsg('Could not reach cloud: ' + e.message, 'err'); return; }
+        const proceed = async () => {
+          elActions.innerHTML = '';
+          setMsg('Building and uploading your show…', 'info');
+          try {
+            const html = generateInscription();
+            const sidecar = { name: projectName || 'Untitled Fireworks', savedAt: nowISO(), timeline: timeline };
+            await rpc('save_export', { p_wallet: wallet, p_html: html, p_json: sidecar });
+            setMsg('Export saved ✓', 'ok');
+            setTimeout(closeModal, 1000);
+          } catch (e) { setMsg('Export failed: ' + e.message, 'err'); }
+        };
+        if (summary && summary.has_export) {
+          elContent.innerHTML = '<div class="wm-slot" style="cursor:default"><div><div class="nm">An export already exists for this wallet.</div><div class="sub">Exporting again replaces it.</div></div></div>';
+          setMsg('will save over existing import, continue?', 'info');
+          elActions.append(btn('Cancel', '', closeModal), btn('Continue', 'primary', proceed));
+        } else {
+          proceed();
+        }
+      }
+
+      window.openWalletFlow = function (mode) {
+        if (mode === 'save') askWallet('Save Project', flowSave);
+        else if (mode === 'import') askWallet('Import Project', flowImport);
+        else if (mode === 'export') askWallet('Export Show', flowExport);
+      };
+    })();
+  </script>
+
+  <!-- ES-module shim: loads the inscribed-style modules via the import map,
+       exposes them as globals for the classic script above, then starts the
+       Three.js preview. Deferred by default, so it runs after the script above
+       has defined window.startThreePreview. -->
+  <script type="module">
+    import * as THREE from 'three';
+    import { EffectComposer, RenderPass, ShaderPass, UnrealBloomPass, FullScreenQuad } from 'three-bloom';
+    window.THREE = THREE;
+    window.EffectComposer = EffectComposer;
+    window.RenderPass = RenderPass;
+    window.ShaderPass = ShaderPass;
+    window.UnrealBloomPass = UnrealBloomPass;
+    window.FullScreenQuad = FullScreenQuad;
+    if (window.startThreePreview) window.startThreePreview();
+    else console.error('startThreePreview not defined — classic script failed earlier.');
+  </script>
+
+  <!-- Block Builder engine: exposes window.BlockShow.generateShow for the
+       "⚡ Block Builder" panel. Deferred module; the panel only calls it on click. -->
+  <script type="module" src="block-shows/engine/showgen.js"></script>
+
+  <script>
+  /* ── Night sky starfield + waving American flag ── */
+  (function () {
+    'use strict';
+
+    /* ── Starfield (fixed behind everything) ─────────────────────────────── */
+    var sf = document.createElement('canvas');
+    sf.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:-1;';
+    document.body.insertBefore(sf, document.body.firstChild);
+
+    function paintStars() {
+      sf.width  = window.innerWidth;
+      sf.height = window.innerHeight;
+      var sc = sf.getContext('2d');
+      for (var i = 0; i < 280; i++) {
+        var x = Math.random() * sf.width;
+        var y = Math.random() * sf.height;
+        var r = Math.random() < 0.70 ? 0.5 : Math.random() < 0.90 ? 1.0 : 1.6;
+        var a = 0.20 + Math.random() * 0.80;
+        sc.fillStyle = 'rgba(255,255,255,' + a.toFixed(2) + ')';
+        sc.beginPath();
+        sc.arc(x, y, r, 0, 6.2832);
+        sc.fill();
+      }
+    }
+    paintStars();
+    window.addEventListener('resize', paintStars);
+
+    /* ── Waving American flag ─────────────────────────────────────────────── */
+    var flagCanvas = document.getElementById('flag-canvas');
+    if (!flagCanvas) return;
+    var ctx = flagCanvas.getContext('2d');
+    var offscreen = null;
+    var t = 0;
+
+    function drawStar(oc, cx, cy, r) {
+      var inner = r * 0.4;
+      oc.beginPath();
+      for (var i = 0; i < 10; i++) {
+        var angle  = (i * Math.PI / 5) - Math.PI / 2;
+        var radius = (i % 2 === 0) ? r : inner;
+        var px = cx + radius * Math.cos(angle);
+        var py = cy + radius * Math.sin(angle);
+        if (i === 0) oc.moveTo(px, py);
+        else         oc.lineTo(px, py);
+      }
+      oc.closePath();
+      oc.fill();
+    }
+
+    function buildFlag(W, H) {
+      var off = document.createElement('canvas');
+      off.width  = W;
+      off.height = H;
+      var oc = off.getContext('2d');
+
+      /* 13 stripes */
+      var sh = H / 13;
+      for (var i = 0; i < 13; i++) {
+        oc.fillStyle = (i % 2 === 0) ? '#BF0A30' : '#FFFFFF';
+        oc.fillRect(0, i * sh, W, sh + 0.5);
+      }
+
+      /* Blue canton (union) — right edge at ~3rd star column from right of old layout */
+      var cw = Math.floor(W * 0.276);
+      var ch = Math.ceil(sh * 7);
+      oc.fillStyle = '#002868';
+      oc.fillRect(0, 0, cw, ch);
+
+      /* 50 stars: 9 rows alternating 6 / 5 */
+      var starRows = [6, 5, 6, 5, 6, 5, 6, 5, 6];
+      var hm   = cw * 0.09;
+      var vm   = ch * 0.10;
+      var hGap = (cw - 2 * hm) / 5;
+      var vGap = (ch - 2 * vm) / 8;
+      var sr   = Math.min(hGap, vGap) * 0.55;
+
+      oc.fillStyle = '#FFFFFF';
+      for (var row = 0; row < 9; row++) {
+        var count  = starRows[row];
+        var baseX  = (row % 2 === 0) ? hm : hm + hGap * 0.5;
+        for (var col = 0; col < count; col++) {
+          drawStar(oc, baseX + col * hGap, vm + row * vGap, sr);
+        }
+      }
+      return off;
+    }
+
+    function resize() {
+      var rect = flagCanvas.parentElement.getBoundingClientRect();
+      flagCanvas.width  = rect.width  || window.innerWidth;
+      flagCanvas.height = rect.height || 90;
+      offscreen = buildFlag(flagCanvas.width, flagCanvas.height);
+    }
+
+    function animate() {
+      if (!offscreen) { requestAnimationFrame(animate); return; }
+      var W = flagCanvas.width, H = flagCanvas.height;
+      ctx.clearRect(0, 0, W, H);
+      var amp  = H * 0.042;
+      var freq = (2 * Math.PI / W) * 1.7;
+      for (var x = 0; x < W; x++) {
+        var dy = amp * Math.sin(freq * x - t);
+        ctx.drawImage(offscreen, x, 0, 1, H, x, dy, 1, H);
+      }
+      t += 0.05;
+      requestAnimationFrame(animate);
+    }
+
+    resize();
+    window.addEventListener('resize', resize);
+    requestAnimationFrame(animate);
+  })();
+  </script>
+</body>
+</html>
