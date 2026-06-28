@@ -636,6 +636,125 @@
     input[type="file"] {
       display: none;
     }
+
+    /* Mobile action buttons — hidden on desktop */
+    #bb-mobile-wrap { display: flex; flex-direction: column; }
+    #mobile-action-btns { display: none; }
+
+    /* ── Mobile layout (≤ 768 px) ────────────────────────────────────── */
+    @media (max-width: 768px) {
+      body { overflow-y: auto; height: auto; min-height: 100vh; }
+
+      #header {
+        height: 52px;
+        padding: 6px 12px;
+        justify-content: flex-start;
+      }
+      #header-brand {
+        position: static;
+        transform: none;
+        text-align: left;
+        align-items: flex-start;
+        gap: 2px;
+      }
+      h1 { font-size: 17px; }
+      #header-sub { display: none; }
+      .header-buttons { display: none; }
+
+      /* Main column */
+      #main { flex-direction: column; overflow: visible; height: auto; }
+
+      /* Timeline panel — full width */
+      #timeline {
+        width: 100%;
+        border-right: none;
+        border-bottom: 2px solid #1e3a6e;
+        height: auto;
+      }
+
+      /* Block builder + mobile buttons side by side */
+      #bb-mobile-wrap {
+        flex-direction: row;
+        align-items: stretch;
+        gap: 6px;
+        padding: 8px 8px 0;
+      }
+      #block-builder { flex: 1; min-width: 0; margin-bottom: 8px; }
+      #mobile-action-btns {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        flex-shrink: 0;
+      }
+      #mobile-action-btns button {
+        flex: 1;
+        padding: 5px 10px;
+        font-size: 11px;
+        font-weight: 700;
+        border-radius: 4px;
+        cursor: pointer;
+        border: 1px solid #4a6aaa;
+        background: rgba(10,25,65,0.82);
+        color: #c8d8f0;
+        transition: background 0.2s;
+      }
+      #mobile-action-btns button:hover { background: rgba(26,60,130,0.9); }
+      #mobile-import-btn { background: #c8a400 !important; border-color: #a88600 !important; color: #000 !important; }
+      #mobile-import-btn:hover { background: #a88600 !important; }
+
+      /* Timeline strip — horizontal scroll */
+      #timeline-header { padding: 5px 10px; font-size: 11px; }
+      #timeline-list {
+        display: flex !important;
+        flex-direction: row;
+        overflow-x: auto;
+        overflow-y: hidden;
+        flex: none;
+        height: 66px;
+        padding: 5px 8px;
+        gap: 6px;
+        align-items: stretch;
+      }
+      .timeline-item {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 4px;
+        min-width: 110px;
+        max-width: 160px;
+        margin-bottom: 0;
+        padding: 4px 6px;
+        height: auto;
+        box-sizing: border-box;
+      }
+      .timeline-item-time { margin-bottom: 0; font-size: 10px; white-space: nowrap; }
+      .timeline-item-details {
+        font-size: 10px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex: 1;
+        min-width: 0;
+      }
+      .delete-btn { position: static; padding: 2px 4px; font-size: 9px; flex-shrink: 0; }
+
+      #mint-blob { margin: 5px 8px; font-size: 12px; }
+      #export-btn { margin: 0 8px 8px; font-size: 13px; padding: 10px; }
+
+      /* Workspace → column */
+      #workspace { flex-direction: column; padding: 8px; gap: 8px; }
+      #picker { width: 100%; }
+      #canvas-area { width: 100%; min-width: 0; }
+
+      /* Global preview — full width, column */
+      #preview-section { flex-direction: column; align-items: stretch; }
+      #preview-container { width: 100%; max-width: 100%; }
+      #preview-instructions { display: none; }
+
+      #global-instructions { font-size: 11px; }
+      #playback-controls button { padding: 6px 10px; font-size: 12px; }
+      #time-display { font-size: 12px; min-width: 90px; }
+    }
   </style>
 </head>
 <body>
@@ -666,17 +785,24 @@
         #block-builder #bb-status{flex:1;text-align:center;font-size:11px;color:#6a8ab0;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
         #block-builder .bb-listlabel{display:flex;align-items:center;gap:6px;font-size:11px;color:#6a8ab0;margin-top:2px;cursor:pointer;}
       </style>
-      <div id="block-builder">
-        <div class="bb-title">⚡ Block Builder — Bitcoin July 4th</div>
-        <div class="bb-row">
-          <input type="number" id="bb-height" placeholder="block height">
-          <button id="bb-go" title="Generate this block's show">Go</button>
-          <button id="bb-random" title="Random July-4 block">🎲</button>
+      <div id="bb-mobile-wrap">
+        <div id="block-builder">
+          <div class="bb-title">⚡ Block Builder — Bitcoin July 4th</div>
+          <div class="bb-row">
+            <input type="number" id="bb-height" placeholder="block height">
+            <button id="bb-go" title="Generate this block's show">Go</button>
+            <button id="bb-random" title="Random July-4 block">🎲</button>
+          </div>
+          <div class="bb-row bb-nav">
+            <button id="bb-prev" title="Previous block">◀</button>
+            <span id="bb-status">Loading July-4 blocks…</span>
+            <button id="bb-next" title="Next block">▶</button>
+          </div>
         </div>
-        <div class="bb-row bb-nav">
-          <button id="bb-prev" title="Previous block">◀</button>
-          <span id="bb-status">Loading July-4 blocks…</span>
-          <button id="bb-next" title="Next block">▶</button>
+        <div id="mobile-action-btns">
+          <button id="mobile-import-btn">Import</button>
+          <button id="mobile-save-btn">Save</button>
+          <button id="mobile-new-btn">New</button>
         </div>
       </div>
       <div id="timeline-header">Timeline (Max 15s)</div>
@@ -2742,6 +2868,75 @@
       isScaling = false;
     });
 
+    // Touch controls for the global preview canvas
+    // 1-finger drag = move, double-tap = cycle frame, 2-finger pinch = scale, 2-finger twist = rotate
+    (function() {
+      let touchDrag = null;   // { ox, oy } offset from anim center
+      let pinchStart = null;  // { dist, angle, scale, rotation } at gesture start
+      let lastTapTime = 0;
+
+      function canvasPos(touch) {
+        const rect = previewCanvas.getBoundingClientRect();
+        return {
+          x: (touch.clientX - rect.left) * (previewCanvas.width / rect.width),
+          y: (touch.clientY - rect.top)  * (previewCanvas.height / rect.height)
+        };
+      }
+
+      function pinchInfo(t1, t2) {
+        const p1 = canvasPos(t1), p2 = canvasPos(t2);
+        const dx = p2.x - p1.x, dy = p2.y - p1.y;
+        return { dist: Math.sqrt(dx*dx + dy*dy), angle: Math.atan2(dy, dx) * (180/Math.PI) };
+      }
+
+      previewCanvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if (!placedAnimation) return;
+        if (e.touches.length === 1) {
+          const now = Date.now();
+          if (now - lastTapTime < 300) { cycleFreeze(); lastTapTime = 0; return; }
+          lastTapTime = now;
+          const p = canvasPos(e.touches[0]);
+          touchDrag = { ox: p.x - placedAnimation.x, oy: p.y - placedAnimation.y };
+          pinchStart = null;
+        } else if (e.touches.length === 2) {
+          touchDrag = null;
+          const info = pinchInfo(e.touches[0], e.touches[1]);
+          pinchStart = { dist: info.dist, angle: info.angle, scale: placedAnimation.scale, rotation: placedAnimation.rotation };
+        }
+      }, { passive: false });
+
+      previewCanvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        if (!placedAnimation) return;
+        if (e.touches.length === 1 && touchDrag) {
+          const p = canvasPos(e.touches[0]);
+          placedAnimation.x = p.x - touchDrag.ox;
+          placedAnimation.y = p.y - touchDrag.oy;
+          drawPreview();
+        } else if (e.touches.length === 2 && pinchStart) {
+          const info = pinchInfo(e.touches[0], e.touches[1]);
+          placedAnimation.scale = Math.max(0.1, Math.min(3, pinchStart.scale * (info.dist / pinchStart.dist)));
+          if (placedAnimation.category !== 'background' && placedAnimation.category !== 'foreground') {
+            placedAnimation.rotation = pinchStart.rotation + (info.angle - pinchStart.angle);
+          }
+          drawPreview();
+        }
+      }, { passive: false });
+
+      previewCanvas.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        if (e.touches.length === 0) {
+          touchDrag = null;
+          pinchStart = null;
+        } else if (e.touches.length === 1 && placedAnimation) {
+          pinchStart = null;
+          const p = canvasPos(e.touches[0]);
+          touchDrag = { ox: p.x - placedAnimation.x, oy: p.y - placedAnimation.y };
+        }
+      }, { passive: false });
+    })();
+
     document.addEventListener('keydown', (e) => {
       const tag = (e.target && e.target.tagName || '').toLowerCase();
       if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
@@ -2897,6 +3092,10 @@
       drawPreview(); // redraw editing handles at the paused playhead
     });
 
+    function stopScrub() {
+      if (scrubInterval) { clearInterval(scrubInterval); scrubInterval = null; }
+    }
+
     // Hold to scrub backward
     stepBack.addEventListener('mousedown', () => {
       currentTime = Math.max(0, currentTime - 16.67);
@@ -2910,19 +3109,11 @@
       }, 16.67);
     });
 
-    stepBack.addEventListener('mouseup', () => {
-      if (scrubInterval) {
-        clearInterval(scrubInterval);
-        scrubInterval = null;
-      }
-    });
-
-    stepBack.addEventListener('mouseleave', () => {
-      if (scrubInterval) {
-        clearInterval(scrubInterval);
-        scrubInterval = null;
-      }
-    });
+    stepBack.addEventListener('mouseup', stopScrub);
+    stepBack.addEventListener('mouseleave', stopScrub);
+    stepBack.addEventListener('touchstart', (e) => { e.preventDefault(); stepBack.dispatchEvent(new MouseEvent('mousedown')); }, { passive: false });
+    stepBack.addEventListener('touchend',   (e) => { e.preventDefault(); stopScrub(); }, { passive: false });
+    stepBack.addEventListener('touchcancel', stopScrub);
 
     // Hold to scrub forward
     stepForward.addEventListener('mousedown', () => {
@@ -2937,19 +3128,11 @@
       }, 16.67);
     });
 
-    stepForward.addEventListener('mouseup', () => {
-      if (scrubInterval) {
-        clearInterval(scrubInterval);
-        scrubInterval = null;
-      }
-    });
-
-    stepForward.addEventListener('mouseleave', () => {
-      if (scrubInterval) {
-        clearInterval(scrubInterval);
-        scrubInterval = null;
-      }
-    });
+    stepForward.addEventListener('mouseup', stopScrub);
+    stepForward.addEventListener('mouseleave', stopScrub);
+    stepForward.addEventListener('touchstart', (e) => { e.preventDefault(); stepForward.dispatchEvent(new MouseEvent('mousedown')); }, { passive: false });
+    stepForward.addEventListener('touchend',   (e) => { e.preventDefault(); stopScrub(); }, { passive: false });
+    stepForward.addEventListener('touchcancel', stopScrub);
 
     resetBtn.addEventListener('click', () => {
       currentTime = 0;
@@ -3029,6 +3212,11 @@
     saveBtn.addEventListener('click', () => window.openWalletFlow('save'));
 
     importBtn.addEventListener('click', () => window.openWalletFlow('import'));
+
+    // Mobile button proxies (shown on narrow screens in place of header buttons)
+    document.getElementById('mobile-import-btn').addEventListener('click', () => window.openWalletFlow('import'));
+    document.getElementById('mobile-save-btn').addEventListener('click', () => window.openWalletFlow('save'));
+    document.getElementById('mobile-new-btn').addEventListener('click', () => newBtn.click());
 
     // ---- ⚡ Block Builder: generate a Bitcoin-block show & auto-play (watch-only) ----
     (function setupBlockBuilder() {
@@ -3755,200 +3943,3 @@
           if (data.export_json) items.push({ label: data.export_json.name || 'Exported show', sub: 'Exported (editable)', proj: data.export_json });
         }
         if (!items.length) { setMsg('No saved projects found for that wallet.', 'err'); elActions.append(btn('Close', '', closeModal)); return; }
-        setMsg('Pick a project to load.', 'info');
-        const wrap = document.createElement('div'); wrap.className = 'wm-list';
-        items.forEach(it => {
-          const el = document.createElement('div'); el.className = 'wm-slot';
-          el.innerHTML = '<div><div class="nm">' + escapeHtml(it.label) + '</div><div class="sub">' + it.sub + '</div></div>';
-          el.addEventListener('click', () => loadProject(it.proj));
-          wrap.appendChild(el);
-        });
-        elContent.appendChild(wrap);
-        elActions.append(btn('Cancel', '', closeModal));
-      }
-      function loadProject(p) {
-        if (!p || !Array.isArray(p.timeline)) { setMsg('That project looks invalid.', 'err'); return; }
-        timeline = p.timeline;
-        projectName = p.name || 'Imported Project';
-        currentTime = 0;
-        placedAnimation = null;
-        updateTimeline();
-        drawPreview();
-        updateTimeDisplay();
-        setMsg('Loaded "' + projectName + '" ✓', 'ok');
-        setTimeout(closeModal, 700);
-      }
-
-      // ---- EXPORT: build show + editable sidecar, confirm overwrite ----
-      async function flowExport(wallet) {
-        elTitle.textContent = 'Export Show';
-        elContent.innerHTML = ''; elActions.innerHTML = '';
-        setMsg('Checking for an existing export…', 'info');
-        let summary;
-        try { summary = await rpc('list_wallet', { p_wallet: wallet }); }
-        catch (e) { setMsg('Could not reach cloud: ' + e.message, 'err'); return; }
-        const proceed = async () => {
-          elActions.innerHTML = '';
-          setMsg('Building and uploading your show…', 'info');
-          try {
-            const html = generateInscription();
-            const sidecar = { name: projectName || 'Untitled Fireworks', savedAt: nowISO(), timeline: timeline };
-            await rpc('save_export', { p_wallet: wallet, p_html: html, p_json: sidecar });
-            setMsg('Export saved ✓', 'ok');
-            setTimeout(closeModal, 1000);
-          } catch (e) { setMsg('Export failed: ' + e.message, 'err'); }
-        };
-        if (summary && summary.has_export) {
-          elContent.innerHTML = '<div class="wm-slot" style="cursor:default"><div><div class="nm">An export already exists for this wallet.</div><div class="sub">Exporting again replaces it.</div></div></div>';
-          setMsg('will save over existing import, continue?', 'info');
-          elActions.append(btn('Cancel', '', closeModal), btn('Continue', 'primary', proceed));
-        } else {
-          proceed();
-        }
-      }
-
-      window.openWalletFlow = function (mode) {
-        if (mode === 'save') askWallet('Save Project', flowSave);
-        else if (mode === 'import') askWallet('Import Project', flowImport);
-        else if (mode === 'export') askWallet('Export Show', flowExport);
-      };
-    })();
-  </script>
-
-  <!-- ES-module shim: loads the inscribed-style modules via the import map,
-       exposes them as globals for the classic script above, then starts the
-       Three.js preview. Deferred by default, so it runs after the script above
-       has defined window.startThreePreview. -->
-  <script type="module">
-    import * as THREE from 'three';
-    import { EffectComposer, RenderPass, ShaderPass, UnrealBloomPass, FullScreenQuad } from 'three-bloom';
-    window.THREE = THREE;
-    window.EffectComposer = EffectComposer;
-    window.RenderPass = RenderPass;
-    window.ShaderPass = ShaderPass;
-    window.UnrealBloomPass = UnrealBloomPass;
-    window.FullScreenQuad = FullScreenQuad;
-    if (window.startThreePreview) window.startThreePreview();
-    else console.error('startThreePreview not defined — classic script failed earlier.');
-  </script>
-
-  <!-- Block Builder engine: exposes window.BlockShow.generateShow for the
-       "⚡ Block Builder" panel. Deferred module; the panel only calls it on click. -->
-  <script type="module" src="block-shows/engine/showgen.js"></script>
-
-  <script>
-  /* ── Night sky starfield + waving American flag ── */
-  (function () {
-    'use strict';
-
-    /* ── Starfield (fixed behind everything) ─────────────────────────────── */
-    var sf = document.createElement('canvas');
-    sf.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:-1;';
-    document.body.insertBefore(sf, document.body.firstChild);
-
-    function paintStars() {
-      sf.width  = window.innerWidth;
-      sf.height = window.innerHeight;
-      var sc = sf.getContext('2d');
-      for (var i = 0; i < 280; i++) {
-        var x = Math.random() * sf.width;
-        var y = Math.random() * sf.height;
-        var r = Math.random() < 0.70 ? 0.5 : Math.random() < 0.90 ? 1.0 : 1.6;
-        var a = 0.20 + Math.random() * 0.80;
-        sc.fillStyle = 'rgba(255,255,255,' + a.toFixed(2) + ')';
-        sc.beginPath();
-        sc.arc(x, y, r, 0, 6.2832);
-        sc.fill();
-      }
-    }
-    paintStars();
-    window.addEventListener('resize', paintStars);
-
-    /* ── Waving American flag ─────────────────────────────────────────────── */
-    var flagCanvas = document.getElementById('flag-canvas');
-    if (!flagCanvas) return;
-    var ctx = flagCanvas.getContext('2d');
-    var offscreen = null;
-    var t = 0;
-
-    function drawStar(oc, cx, cy, r) {
-      var inner = r * 0.4;
-      oc.beginPath();
-      for (var i = 0; i < 10; i++) {
-        var angle  = (i * Math.PI / 5) - Math.PI / 2;
-        var radius = (i % 2 === 0) ? r : inner;
-        var px = cx + radius * Math.cos(angle);
-        var py = cy + radius * Math.sin(angle);
-        if (i === 0) oc.moveTo(px, py);
-        else         oc.lineTo(px, py);
-      }
-      oc.closePath();
-      oc.fill();
-    }
-
-    function buildFlag(W, H) {
-      var off = document.createElement('canvas');
-      off.width  = W;
-      off.height = H;
-      var oc = off.getContext('2d');
-
-      /* 13 stripes */
-      var sh = H / 13;
-      for (var i = 0; i < 13; i++) {
-        oc.fillStyle = (i % 2 === 0) ? '#BF0A30' : '#FFFFFF';
-        oc.fillRect(0, i * sh, W, sh + 0.5);
-      }
-
-      /* Blue canton (union) — right edge at ~3rd star column from right of old layout */
-      var cw = Math.floor(W * 0.276);
-      var ch = Math.ceil(sh * 7);
-      oc.fillStyle = '#002868';
-      oc.fillRect(0, 0, cw, ch);
-
-      /* 50 stars: 9 rows alternating 6 / 5 */
-      var starRows = [6, 5, 6, 5, 6, 5, 6, 5, 6];
-      var hm   = cw * 0.09;
-      var vm   = ch * 0.10;
-      var hGap = (cw - 2 * hm) / 5;
-      var vGap = (ch - 2 * vm) / 8;
-      var sr   = Math.min(hGap, vGap) * 0.55;
-
-      oc.fillStyle = '#FFFFFF';
-      for (var row = 0; row < 9; row++) {
-        var count  = starRows[row];
-        var baseX  = (row % 2 === 0) ? hm : hm + hGap * 0.5;
-        for (var col = 0; col < count; col++) {
-          drawStar(oc, baseX + col * hGap, vm + row * vGap, sr);
-        }
-      }
-      return off;
-    }
-
-    function resize() {
-      var rect = flagCanvas.parentElement.getBoundingClientRect();
-      flagCanvas.width  = rect.width  || window.innerWidth;
-      flagCanvas.height = rect.height || 90;
-      offscreen = buildFlag(flagCanvas.width, flagCanvas.height);
-    }
-
-    function animate() {
-      if (!offscreen) { requestAnimationFrame(animate); return; }
-      var W = flagCanvas.width, H = flagCanvas.height;
-      ctx.clearRect(0, 0, W, H);
-      var amp  = H * 0.042;
-      var freq = (2 * Math.PI / W) * 1.7;
-      for (var x = 0; x < W; x++) {
-        var dy = amp * Math.sin(freq * x - t);
-        ctx.drawImage(offscreen, x, 0, 1, H, x, dy, 1, H);
-      }
-      t += 0.05;
-      requestAnimationFrame(animate);
-    }
-
-    resize();
-    window.addEventListener('resize', resize);
-    requestAnimationFrame(animate);
-  })();
-  </script>
-</body>
-</html>
