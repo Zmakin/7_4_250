@@ -115,7 +115,7 @@ This generates a single `.html` file that:
 - Is safely sent my a backende server with per wallet address determinism and recollection
 - You can Save up to 3 shows to work on at any time but Export only 1 timeline for final inscription
 
-The exported file is self-contained and ready to inscribe. Working with Ord-Drops.xyz this will be solely available to the wallet that submitted the exported file, or they may choose from a curated list st mint time.
+The exported file is self-contained and ready to inscribe. Working with Ord-Drops.xyz this will be solely available to the wallet that submitted the exported file.
 
 ---
 
@@ -123,7 +123,7 @@ The exported file is self-contained and ready to inscribe. Working with Ord-Drop
 
 ## Browser Requirements
 
-Any modern desktop browser works — Chrome, Firefox, Edge, Safari. The builder uses WebGL (Three.js) and Web Audio. Mobile browsers work for viewing but the canvas interaction is designed for mouse/pointer input.
+Any modern desktop browser works — Chrome, Firefox, Edge, Safari. The builder uses WebGL (Three.js) and Web Audio. Mobile browsers appear in a stack vertical design and are more compact but still produce the same results. The design is much easier to accomplish on a device with a mouse and keyboard imo.
 
 ---
 
